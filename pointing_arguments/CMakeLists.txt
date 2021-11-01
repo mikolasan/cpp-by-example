@@ -1,0 +1,5 @@
+add_executable(pointing pointing.cpp)
+add_executable(cleaning cleaning.cpp)
+add_executable(by-reference by-reference.cpp)
+add_executable(c-style c-style.cpp)
+add_executable(cpp-style cpp-style.cpp)
