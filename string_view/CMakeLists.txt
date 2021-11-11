@@ -1,0 +1,6 @@
+set(CMAKE_CXX_STANDARD 17)
+add_executable(ub-stack-allocation ub-stack-allocation.cpp)
+add_executable(ub-heap-allocation ub-heap-allocation.cpp)
+add_executable(string-view-copy string-view-copy.cpp)
+add_executable(string-view-copy-2 string-view-copy-2.cpp)
+add_executable(string-view-copy-3 string-view-copy-3.cpp)
