@@ -12,3 +12,4 @@ add_subdirectory(fork)
 add_subdirectory(pointing_arguments)
 add_subdirectory(send_udp) # c++17
 add_subdirectory(string_view) # c++17
+add_subdirectory(raw_pointer_container)
