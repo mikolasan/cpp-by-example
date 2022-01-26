@@ -9,6 +9,7 @@ add_subdirectory(const)
 add_subdirectory(destructor)
 add_subdirectory(enable_if)
 add_subdirectory(fork)
+add_subdirectory(non_copyable)
 add_subdirectory(pointing_arguments)
 add_subdirectory(send_udp) # c++17
 add_subdirectory(string_view) # c++17
