@@ -4,7 +4,7 @@
 
 class InterestingData {
 public:
-    InterestingData() = delete;
+    InterestingData() = delete; // map wants this !
     InterestingData(int id) : _id(id) {
         std::cout << "constructor" << _id << std::endl;
     }
