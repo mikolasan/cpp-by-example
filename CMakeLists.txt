@@ -16,3 +16,4 @@ add_subdirectory(send_udp) # c++17
 add_subdirectory(string_view) # c++17
 add_subdirectory(raw_pointer_container)
 add_subdirectory(weird_map) # c++17
+add_subdirectory(virtual_call)
