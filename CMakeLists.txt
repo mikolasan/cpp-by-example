@@ -5,6 +5,7 @@ project(twitter_slides VERSION 0.0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_subdirectory(combinations)
 add_subdirectory(const)
 add_subdirectory(destructor)
 add_subdirectory(enable_if)
