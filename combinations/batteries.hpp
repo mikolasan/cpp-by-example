@@ -1,5 +1,18 @@
 #include <tuple>
 
+// https://kevinushey.github.io/blog/2016/01/27/introduction-to-c++-variadic-templates/
+
+template<typename T>
+constexpr T max(T a) {
+    return a;
+}
+
+template<typename T, typename... Rest>
+constexpr T max(T a, Rest... rest) {
+    T b = max(rest...);
+    return a < b ? b : a;
+}
+
 // https://www.reedbeta.com/blog/python-like-enumerate-in-cpp17/
 
 template <typename T,
