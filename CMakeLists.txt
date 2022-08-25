@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(thirdparty/rapidyaml)
 
+add_subdirectory(stdstring)
 add_subdirectory(combinations)
 add_subdirectory(const)
 add_subdirectory(destructor)
