@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(thirdparty/rapidyaml)
 
-add_subdirectory(stdstring)
 add_subdirectory(combinations)
 add_subdirectory(const)
 add_subdirectory(destructor)
@@ -16,10 +15,13 @@ add_subdirectory(fork)
 add_subdirectory(lua)
 add_subdirectory(non_copyable)
 add_subdirectory(pointing_arguments)
-#add_subdirectory(rabbit)
+add_subdirectory(rabbit)
 add_subdirectory(raw_pointer_container)
+add_subdirectory(regex)
 add_subdirectory(send_udp) # c++17
+add_subdirectory(stdstring) # c++20
 add_subdirectory(string_view) # c++17
+add_subdirectory(templates) # c++20
 add_subdirectory(variadic)
 add_subdirectory(virtual_call)
 add_subdirectory(weird_map) # c++17
