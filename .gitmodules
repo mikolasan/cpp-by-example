@@ -1,3 +1,6 @@
 [submodule "thirdparty/rapidyaml"]
 	path = thirdparty/rapidyaml
 	url = https://github.com/biojppm/rapidyaml.git
+[submodule "thirdparty/llvm"]
+	path = thirdparty/llvm
+	url = https://github.com/llvm/llvm-project.git

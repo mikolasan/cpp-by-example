@@ -9,6 +9,7 @@ add_subdirectory(thirdparty/rapidyaml)
 
 add_subdirectory(stdstring)
 add_subdirectory(combinations)
+add_subdirectory(compiler)
 add_subdirectory(const)
 add_subdirectory(destructor)
 add_subdirectory(enable_if)
