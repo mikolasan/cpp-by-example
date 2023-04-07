@@ -15,6 +15,8 @@ include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 add_executable(code-to-assembly code-to-assembly.cpp)
+add_executable(bfd-example bfd-example.cpp)
 
 # Link against LLVM libraries
 target_link_libraries(code-to-assembly LLVMCore LLVMExecutionEngine LLVMInterpreter)
+target_link_libraries(bfd-example bfd)
