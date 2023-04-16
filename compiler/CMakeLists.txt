@@ -8,13 +8,44 @@ find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-# Add LLVM include directories
-include_directories(${LLVM_INCLUDE_DIRS})
-
-# Add the LLVM definitions
 add_definitions(${LLVM_DEFINITIONS})
-
+# set(LLVM_LINK_COMPONENTS
+#   Support
+#   )
+  
 add_executable(code-to-assembly code-to-assembly.cpp)
 
-# Link against LLVM libraries
-target_link_libraries(code-to-assembly LLVMCore LLVMExecutionEngine LLVMInterpreter)
+target_include_directories(code-to-assembly PRIVATE ${LLVM_INCLUDE_DIRS})
+target_link_directories(code-to-assembly PRIVATE ${LLVM_LIBRARY_DIRS})
+
+llvm_map_components_to_libnames(llvm_libs
+  binaryformat  
+  core
+  frontendopenmp
+  option
+  support
+  targetparser
+  windowsdriver
+  )
+
+target_link_libraries(code-to-assembly 
+  PRIVATE
+  clangAnalysis
+  clangAST
+  clangASTMatchers
+  clangBasic
+  clangCodeGen
+  clangDriver
+  clangEdit
+  clangFrontend
+  clangLex
+  clangParse
+  clangSema
+  clangSerialization
+  clangSupport
+  clangTooling
+  ${llvm_libs}
+  Version
+  )
+
+# Version.lib - https://learn.microsoft.com/en-us/windows/win32/api/winver/nf-winver-getfileversioninfosizew
