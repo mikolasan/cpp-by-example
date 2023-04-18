@@ -24,6 +24,7 @@ add_subdirectory(raw_pointer_container)
 add_subdirectory(send_udp) # c++17
 add_subdirectory(serialization)
 add_subdirectory(string_view) # c++17
+add_subdirectory(thread)
 add_subdirectory(variadic)
 add_subdirectory(virtual_call)
 add_subdirectory(weird_map) # c++17

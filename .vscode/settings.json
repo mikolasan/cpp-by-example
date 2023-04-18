@@ -77,7 +77,8 @@
         "regex": "cpp",
         "source_location": "cpp",
         "future": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "forward_list": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
