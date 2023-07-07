@@ -8,3 +8,6 @@ endif(OPENSSL_FOUND)
 
 add_executable(sha_test sha-test.cpp)
 target_link_libraries(sha_test ${OPENSSL_LIBRARIES})
+
+add_executable(sha256_test sha256-test.cpp)
+target_link_libraries(sha256_test ${OPENSSL_LIBRARIES})

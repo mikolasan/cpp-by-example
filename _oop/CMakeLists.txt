@@ -1,0 +1,3 @@
+add_subdirectory(destructor)
+add_subdirectory(non_copyable)
+add_subdirectory(virtual_call)
