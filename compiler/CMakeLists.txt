@@ -17,6 +17,9 @@ add_executable(code-to-assembly code-to-assembly.cpp)
 target_include_directories(code-to-assembly PRIVATE ${LLVM_INCLUDE_DIRS})
 target_link_directories(code-to-assembly PRIVATE ${LLVM_LIBRARY_DIRS})
 
+# https://llvm.org/docs/CMake.html#embedding-llvm-in-your-project
+# https://stackoverflow.com/questions/25782537/cmake-and-clang-tooling-linking-error-out-of-tree/25783251#25783251
+
 llvm_map_components_to_libnames(llvm_libs
   binaryformat  
   core
