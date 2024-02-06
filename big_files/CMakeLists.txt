@@ -1,0 +1,2 @@
+add_executable(diff_two_archives diff_two_archives.cpp)
+target_link_libraries(diff_two_archives PRIVATE z)

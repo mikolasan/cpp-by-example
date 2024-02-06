@@ -78,7 +78,11 @@
         "source_location": "cpp",
         "future": "cpp",
         "typeindex": "cpp",
-        "forward_list": "cpp"
+        "forward_list": "cpp",
+        "format": "cpp",
+        "span": "cpp",
+        "stdfloat": "cpp",
+        "*.ipp": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
