@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(thirdparty/rapidyaml)
 
+set(OpenGL_GL_PREFERENCE GLVND)
+add_subdirectory(thirdparty/raylib-git)
+
 add_subdirectory(_oop)
 add_subdirectory(_std)
 add_subdirectory(_templates)
@@ -17,6 +20,7 @@ add_subdirectory(compiler)
 add_subdirectory(const)
 add_subdirectory(crypto)
 add_subdirectory(fork)
+add_subdirectory(led)
 add_subdirectory(lua)
 add_subdirectory(opencv)
 add_subdirectory(pointing_arguments)
