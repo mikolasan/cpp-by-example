@@ -1,6 +1,5 @@
 #include <iomanip>
 #include <iostream>
-#include <iomanip>
 
 #include "Artnet.h"
 #include "ipaddress.h"

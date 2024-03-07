@@ -36,6 +36,7 @@ target_include_directories(show_viz PRIVATE
   sender
   show
   stream
+  cppzmq
   ../thirdparty/rapidyaml/src
 )
 target_link_directories(show_viz PRIVATE thirdparty/lib)

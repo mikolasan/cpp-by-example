@@ -1,0 +1,57 @@
+#include <map>
+#include <mutex>
+#include <stdint.h>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <vector>
+
+#include "Artnet.h"
+#include "show_cached.hpp"
+#include "test_stream.hpp"
+
+class ShowTest : public ShowCached {
+public:
+    ShowTest(
+        const std::string& codename,
+        const std::string& filename,
+        std::map<int, std::vector<Color>>* pixels,
+        std::mutex* pixels_mutex
+    ) : 
+        pixels(pixels),
+        pixels_mutex(pixels_mutex),
+        ShowCached(codename, filename)
+    {}
+
+    void send() override {
+        sender = std::thread([this](){
+            play();
+        });
+        sender.detach();
+    }
+protected:
+    size_t do_send(const std::string_view& data) override {
+        std::string data_copy(data.data(), data.size());
+        artnet.open(data_copy);
+
+        artnet.subscribe([this](const uint32_t universe, const uint8_t* data, const uint16_t size) -> void {
+            std::lock_guard<std::mutex> lock(*pixels_mutex);
+            for (int i = 0; i < size / 3; ++ i) {
+                auto c = Color(data[3*i], data[3*i + 1], data[3*i + 2], 255);
+                (*pixels)[universe][i] = c;
+            }
+        });
+        
+        do {
+            artnet.parse();
+        } while (artnet.hasPackets());
+
+        return 0;
+    }
+private:
+    using ArtnetReceiver = arx::artnet::Receiver<TestStream>;
+    ArtnetReceiver artnet;
+    std::thread sender;
+    std::mutex *pixels_mutex;
+    std::map<int, std::vector<Color>> *pixels;
+};

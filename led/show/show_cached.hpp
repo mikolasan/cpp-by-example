@@ -7,7 +7,7 @@
 #include <tuple>
 
 #include "pcap_stream.hpp"
-#include "show_abstract.h"
+#include "show_abstract.hpp"
 
 
 class ShowCached : public AbstractShow {

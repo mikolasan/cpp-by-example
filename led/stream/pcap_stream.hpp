@@ -17,10 +17,8 @@
 #include <netinet/udp.h>
 
 #include "ipaddress.h"
-#include "show_abstract.h"
+#include "show.h"
 
-using Clock = std::chrono::high_resolution_clock;
-using TimePoint = std::chrono::time_point<Clock>;
 namespace fs = std::filesystem;
 
 class PcapStream {

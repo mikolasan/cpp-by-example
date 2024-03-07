@@ -4,7 +4,7 @@
 #include <sstream>
 
 #include "pcap_stream.hpp"
-#include "show_abstract.h"
+#include "show.h"
 
 std::string get_file_contents(const char *filename)
 {
