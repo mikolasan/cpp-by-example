@@ -42,21 +42,22 @@ public:
                 do {
                     Duration time_from_start = std::get<2>(*current_packet);
                     auto expected_time = start_show_time + time_from_start;
-                    expected_wait += std::chrono::duration_cast<std::chrono::nanoseconds>(
-                        std::get<1>(*current_packet)).count();
-                    if (expected_wait < 100 /* ns */) {
-                        ++current_packet;
-                        continue;
-                    }
-                    expected_wait = 0;
+                    // expected_wait += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    //     std::get<1>(*current_packet)).count();
+                    // if (expected_wait < 100 /* ns */) {
+                    //     ++current_packet;
+                    //     continue;
+                    // }
+                    // expected_wait = 0;
 
                     if (time_from_start.count() > 0) {
                         std::this_thread::sleep_until(expected_time);
                     }
                     TimePoint send_time = Clock::now();
-                    int64_t diff = std::chrono::duration_cast<std::chrono::microseconds>(
-                        send_time - expected_time).count();
-                    if (diff > 100) {
+                    // int64_t diff = std::chrono::duration_cast<std::chrono::microseconds>(
+                    //     send_time - expected_time).count();
+                    // if (diff > 100) {
+                        
                         // int64_t expected_wait = std::chrono::duration_cast<std::chrono::nanoseconds>(
                         //     std::get<1>(*current_packet)).count();
                         // std::cout << "!!! Diff in send " 
@@ -64,9 +65,12 @@ public:
                         //     << " expected wait " << expected_wait
                         //     << " ns"
                         //     << std::endl;
-                    } else {
-                        int n_bytes = do_send(std::get<0>(*current_packet));
-                    }
+
+                    // } else {
+                        if (state.get_visible_flag()) {
+                            int n_bytes = do_send(std::get<0>(*current_packet));
+                        }
+                    // }
                     ++current_packet;
                 } while (current_packet != udp_cache.end() && state.is_playing());
             } catch (const std::exception& e) {

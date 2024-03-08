@@ -21,16 +21,16 @@ public:
         ShowCached(codename, filename)
     {}
 
-    void send() override {
-        play();
-    }
-
     // void send() override {
-    //     sender = std::thread([this](){
-    //         play();
-    //     });
-    //     sender.detach();
+    //     play();
     // }
+
+    void send() override {
+        sender = std::thread([this](){
+            play();
+        });
+        sender.detach();
+    }
 protected:
     size_t do_send(const std::string_view& data) override {
         std::string data_copy(data.data(), data.size());
