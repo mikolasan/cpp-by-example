@@ -1,6 +1,7 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <future>
 #include <map>
 #include <mutex>
 #include <regex>
@@ -52,8 +53,14 @@ void draw(const std::string& show_name, const std::map<int, std::vector<Color>>&
 // (select|play|stop):(game_name):(sound_name)
 const std::regex message_regex("(\\w*)\\|([a-z_]*)\\|(.*)", std::regex_constants::ECMAScript);
 
+template <typename R>
+bool is_future_ready(std::future<R> const& f) {
+    return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+}
+
 // (action, show_name)
-std::tuple<std::string, std::string> receive_and_parse(zmq::socket_t& socket) {
+using ParsedMessage = std::tuple<std::string, std::string>;
+ParsedMessage receive_and_parse(zmq::socket_t& socket) {
     zmq::message_t request;
     // receive a request from client
     const zmq::recv_result_t res = socket.recv(request, zmq::recv_flags::none);
@@ -127,8 +134,27 @@ int main(int argc, char const *argv[])
         // AbstractShow* next_show = nullptr;
         TimePoint last_message_time = TimePoint();
         
+        std::future<ParsedMessage> result;
         while (true) {
-            const auto [action, show_name] = receive_and_parse(socket);
+            if (!result.valid()) {
+                result = \
+                    std::async(std::launch::async, receive_and_parse, std::ref(socket));
+                continue;
+            }
+            if (!is_future_ready(result)) {
+                continue;
+            }
+            
+            // std::packaged_task<ParsedMessage(zmq::socket_t&)> task(receive_and_parse);
+            // const auto [action, show_name] = receive_and_parse(socket);
+            // std::future<ParsedMessage> result = task.get_future();
+            // block
+            // task(socket);
+            // std::thread task_td(std::move(task), std::ref(socket));
+            // task_td.join();
+
+            const auto [action, show_name] = result.get();
+
             if (!show_buffer.contains(show_name)) {
                 // std::cout << "No mapping for '" << show_name << "'" << std::endl;
                 continue;
