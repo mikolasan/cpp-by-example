@@ -78,10 +78,19 @@ public:
         return background;
     }
 
+    void set_visible(bool flag) {
+        visible = flag;
+    }
+
+    bool get_visible_flag() const {
+        return visible;
+    }
+
 private:
     bool background;
     bool loop;
     bool ignore_stop;
+    bool visible; // used for keep backgrounds playing but not sending anything
     std::atomic<bool> show_playing;
     std::atomic<bool> force_stopped;
 };
@@ -125,6 +134,7 @@ public:
 protected:
     std::string codename;
     std::string filename;
+    
     // bool background;
     // bool loop;
     // bool ignore_stop;

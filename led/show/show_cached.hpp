@@ -30,56 +30,43 @@ public:
     void play() override {
         state.play();
         do {
-            std::cout << "-- start " << codename << std::endl;
+            std::cout << "-- start [" 
+                << length_us / 1000000 // milliseconds
+                << "] "
+                << codename 
+                << std::endl;
             try {
-                auto background_start_time = std::chrono::duration_cast<Duration>(background_start.time_since_epoch()).count();
-                // std::cout << "background_start_time: " << background_start_time << " us\n";
-                auto is_playing = background_start_time > 0;
-                if (state.get_background_flag() && is_playing) {
-                    // show was playing in the background, rewinding...
-                    TimePoint background_stop = Clock::now();
-                    auto duration = std::chrono::duration_cast<Duration>(background_stop - background_start);
-                    auto full_sequence_duration = std::get<2>(udp_cache.back());
-                    auto elapsed_from_start_duration = std::get<2>(*current_packet);
-                    auto remaining_duration = full_sequence_duration - elapsed_from_start_duration;
-                    std::cout << "Duration: " << duration.count() << " us\n";
-                    std::cout << "full_sequence_duration: " << full_sequence_duration.count() << " us\n";
-                    std::cout << "elapsed_from_start_duration: " << elapsed_from_start_duration.count() << " us\n";
-                    std::cout << "remaining_duration: " << remaining_duration.count() << " us\n";
-                    if (duration > remaining_duration) {
-                        duration -= remaining_duration;
-                        std::cout << "duration (rewind to beginning): " << duration.count() << " us\n";
-                        current_packet = udp_cache.begin();
-                        while (duration > full_sequence_duration) {
-                            duration -= full_sequence_duration;
-                            // std::cout << "duration (substract full cycle): " << duration.count() << " us\n";
-                            // duration %= full_sequence_duration
-                        }
-                    }
-                    
-                    std::cout << std::distance(udp_cache.begin(), current_packet) << " / " << udp_cache.size() << std::endl;
-                    for (size_t i = std::distance(udp_cache.begin(), current_packet);
-                            current_packet != udp_cache.end();
-                            ++current_packet, ++i) {
-                        // std::cout << i << " / " << udp_cache.size() << std::endl;
-                        auto packet_duration = std::get<1>(*current_packet);
-                        if (duration > packet_duration) {
-                            duration -= packet_duration;
-                            // std::cout << "duration (fast forward to the packet): " << duration.count() << " us\n";
-                        } else {
-                            std::cout << i << " / " << udp_cache.size() << std::endl;
-                            break;
-                        }
-                    }
-                    background_start = TimePoint();
-                } else {
-                    current_packet = udp_cache.begin();
-                }
+                current_packet = udp_cache.begin();
+                TimePoint start_show_time = Clock::now();
+                int64_t expected_wait = 0;
                 do {
-                    start_processing_time = Clock::now();
-                    std::this_thread::sleep_for(std::get<1>(*current_packet));
-                    // int n_bytes = udp.send(std::get<0>(*current_packet));
-                    int n_bytes = do_send(std::get<0>(*current_packet));
+                    Duration time_from_start = std::get<2>(*current_packet);
+                    auto expected_time = start_show_time + time_from_start;
+                    expected_wait += std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        std::get<1>(*current_packet)).count();
+                    if (expected_wait < 100 /* ns */) {
+                        ++current_packet;
+                        continue;
+                    }
+                    expected_wait = 0;
+
+                    if (time_from_start.count() > 0) {
+                        std::this_thread::sleep_until(expected_time);
+                    }
+                    TimePoint send_time = Clock::now();
+                    int64_t diff = std::chrono::duration_cast<std::chrono::microseconds>(
+                        send_time - expected_time).count();
+                    if (diff > 100) {
+                        // int64_t expected_wait = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                        //     std::get<1>(*current_packet)).count();
+                        // std::cout << "!!! Diff in send " 
+                        //     << diff
+                        //     << " expected wait " << expected_wait
+                        //     << " ns"
+                        //     << std::endl;
+                    } else {
+                        int n_bytes = do_send(std::get<0>(*current_packet));
+                    }
                     ++current_packet;
                 } while (current_packet != udp_cache.end() && state.is_playing());
             } catch (const std::exception& e) {
@@ -91,11 +78,12 @@ public:
 
 private:
     void cache(const std::string& filename) {
-        udp_cache = cache_file(filename);
+        std::tie(udp_cache, length_us) = cache_file(filename);
         current_packet = udp_cache.begin();
     }
 
 protected:
+    uint64_t length_us; // length in nanoseconds
     TimePoint start_processing_time;
     TimePoint background_start;
     PacketList udp_cache;

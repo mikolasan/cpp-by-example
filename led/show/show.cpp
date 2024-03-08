@@ -25,11 +25,11 @@ const auto copy = [](std::string_view src) -> std::string_view {
     return {dest, src.size()};
 };
 
-PacketList cache_file(const std::string& filename) {
+std::tuple<PacketList, uint64_t> cache_file(const std::string& filename) {
     PacketList udp_cache;
     PcapStream stream{filename};
+    Duration total_duration{0};
     try {
-        Duration total_duration{0};
         do {
             const size_t size = stream.parsePacket();
             if (size == 0) continue;
@@ -40,5 +40,11 @@ PacketList cache_file(const std::string& filename) {
     } catch (...) {
         std::cerr << "caching error :(" << std::endl;
     }
-    return udp_cache;
+    // std::cout << "Total duration (total of pauses): " << total_duration.count() << " nsec" << std::endl;
+    // std::cout << std::endl;
+    // std::cout << "First stream timestamp: " << stream.first_timestamp.count() << " nsec" << std::endl;
+    // std::cout << "Last stream timestamp: " << stream.last_timestamp.count() << " nsec" << std::endl;
+    // std::cout << "Diff: " << (stream.last_timestamp.count() - stream.first_timestamp.count()) << " nsec" << std::endl;
+        
+    return {udp_cache, total_duration.count()};
 }

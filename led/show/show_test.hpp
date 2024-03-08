@@ -10,25 +10,27 @@
 #include "show_cached.hpp"
 #include "test_stream.hpp"
 
-class ShowTest : public ShowCached {
+class TestShow : public ShowCached {
 public:
-    ShowTest(
+    TestShow(
         const std::string& codename,
-        const std::string& filename,
-        std::map<int, std::vector<Color>>* pixels,
-        std::mutex* pixels_mutex
+        const std::string& filename
     ) : 
-        pixels(pixels),
-        pixels_mutex(pixels_mutex),
+        pixels(nullptr),
+        pixels_mutex(nullptr),
         ShowCached(codename, filename)
     {}
 
     void send() override {
-        sender = std::thread([this](){
-            play();
-        });
-        sender.detach();
+        play();
     }
+
+    // void send() override {
+    //     sender = std::thread([this](){
+    //         play();
+    //     });
+    //     sender.detach();
+    // }
 protected:
     size_t do_send(const std::string_view& data) override {
         std::string data_copy(data.data(), data.size());
@@ -48,10 +50,12 @@ protected:
 
         return 0;
     }
+
+public:
+    std::mutex *pixels_mutex;
+    std::map<int, std::vector<Color>> *pixels;
 private:
     using ArtnetReceiver = arx::artnet::Receiver<TestStream>;
     ArtnetReceiver artnet;
     std::thread sender;
-    std::mutex *pixels_mutex;
-    std::map<int, std::vector<Color>> *pixels;
 };

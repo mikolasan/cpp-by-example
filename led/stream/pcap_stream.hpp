@@ -61,14 +61,16 @@ public:
             return 0;
         }
 
-        const Clock::duration duration = std::chrono::microseconds(header->ts.tv_sec * 1000000 + header->ts.tv_usec);
+        const Clock::duration duration = std::chrono::nanoseconds((header->ts.tv_sec * 1000000 + header->ts.tv_usec) * 1000);
         const TimePoint time_point(duration);
         if (last_packet_point) {
-            wait_duration_usec = std::chrono::duration_cast<Duration>(time_point - last_packet_point.value());
+            wait_duration_nsec = std::chrono::duration_cast<Duration>(time_point - last_packet_point.value());
+            last_timestamp = duration;
         } else {
-            wait_duration_usec = std::chrono::microseconds(0);
+            wait_duration_nsec = std::chrono::nanoseconds(0);
+            first_timestamp = duration;
         }
-        // std::cout << wait_duration_usec.count() << " us\n";
+        // std::cout << wait_duration_nsec.count() << " us\n";
         last_packet_point = time_point;
         // Ethernet layer
         const struct ether_header* ethernet_header = reinterpret_cast<const struct ether_header*>(packet);
@@ -117,14 +119,18 @@ public:
     }
 
     void wait() const {
-        std::this_thread::sleep_for(wait_duration_usec);
+        std::this_thread::sleep_for(wait_duration_nsec);
     }
 
     IPAddress remoteIP() const { return remote_ip; }
     uint16_t remotePort() const { return remote_port; }
     bool hasPackets() const { return has_packets; }
     Data getData() const { return data; }
-    Duration getDuration() const { return wait_duration_usec; }
+    Duration getDuration() const { return wait_duration_nsec; }
+
+public:
+    Clock::duration first_timestamp;
+    Clock::duration last_timestamp;
 
 private:
     pcap_t* handle;
@@ -136,5 +142,5 @@ private:
     Data data;
     bool has_packets;
     std::optional<TimePoint> last_packet_point;
-    Duration wait_duration_usec;
+    Duration wait_duration_nsec;
 };
