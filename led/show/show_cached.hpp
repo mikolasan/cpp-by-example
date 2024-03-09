@@ -38,7 +38,7 @@ public:
             try {
                 current_packet = udp_cache.begin();
                 TimePoint start_show_time = Clock::now();
-                int64_t expected_wait = 0;
+                // int64_t expected_wait = 0;
                 do {
                     Duration time_from_start = std::get<2>(*current_packet);
                     auto expected_time = start_show_time + time_from_start;
@@ -71,7 +71,14 @@ public:
                             int n_bytes = do_send(std::get<0>(*current_packet));
                         }
                     // }
-                    ++current_packet;
+                    if (rewind_set) {
+                        current_packet = udp_cache.begin();
+                        start_show_time = Clock::now();
+                        rewind_set = false;
+                    } else {
+                        ++current_packet;
+                    }
+
                 } while (current_packet != udp_cache.end() && state.is_playing());
             } catch (const std::exception& e) {
                 std::cerr << e.what() << '\n';
@@ -80,6 +87,10 @@ public:
         } while (state.is_playing() && state.needs_to_play());
     }
 
+    void rewind() {
+        std::cout << "-- rewind " << codename << std::endl;
+        rewind_set = true;
+    }
 private:
     void cache(const std::string& filename) {
         std::tie(udp_cache, length_us) = cache_file(filename);
@@ -92,4 +103,5 @@ protected:
     TimePoint background_start;
     PacketList udp_cache;
     PacketList::iterator current_packet;
+    std::atomic_bool rewind_set;
 };

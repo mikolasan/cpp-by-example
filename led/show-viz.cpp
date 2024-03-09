@@ -1,5 +1,6 @@
 #include <array>
 #include <chrono>
+#include <condition_variable>
 #include <cstdint>
 #include <future>
 #include <map>
@@ -25,7 +26,11 @@ const int n_leds_per_universe = 170;
 const int max_leds_per_row = 50;
 const int led_size = 10;
 
-void draw(const std::string& show_name, const std::map<int, std::vector<Color>>& pixels, std::mutex& pixels_mutex) {
+void draw(
+    const std::string& show_name,
+    const std::map<int, std::vector<Color>>& pixels,
+    std::mutex& pixels_mutex)
+{
     BeginDrawing();
 
     ClearBackground(BLACK);
@@ -54,13 +59,15 @@ void draw(const std::string& show_name, const std::map<int, std::vector<Color>>&
 const std::regex message_regex("(\\w*)\\|([a-z_]*)\\|(.*)", std::regex_constants::ECMAScript);
 
 template <typename R>
-bool is_future_ready(std::future<R> const& f) {
+bool is_future_ready(std::future<R> const& f)
+{
     return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }
 
 // (action, show_name)
 using ParsedMessage = std::tuple<std::string, std::string>;
-ParsedMessage receive_and_parse(zmq::socket_t& socket) {
+ParsedMessage receive_and_parse(zmq::socket_t& socket)
+{
     zmq::message_t request;
     // receive a request from client
     const zmq::recv_result_t res = socket.recv(request, zmq::recv_flags::none);
@@ -93,6 +100,121 @@ ParsedMessage receive_and_parse(zmq::socket_t& socket) {
     return {action, show_name};
 }
 
+void process_command(
+    const std::string& action,
+    const std::string& show_name,
+    AbstractShow** current_show,
+    std::future<std::string>& show_ended,
+    std::stack<AbstractShow*>& background_shows,
+    std::map<std::string, TestShow*>& show_buffer,
+    TimePoint& last_message_time)
+{
+    AbstractShow* show = *current_show;
+
+    if (!show_buffer.contains(show_name)) {
+        // std::cout << "No mapping for '" << show_name << "'" << std::endl;
+        return;
+    }
+    TimePoint message_time = Clock::now();
+    uint64_t time_past = std::chrono::duration_cast<std::chrono::milliseconds>(
+            message_time - last_message_time).count();
+    last_message_time = message_time;
+    std::cout << ">> [" 
+        << time_past
+        << "] <<" << action
+        << ">> " << show_name
+        << std::endl;
+
+    // std::lock_guard<std::mutex> lock(show_mutex);
+    
+    if (action == "select" || action == "play") {
+        // if (action == "select") {
+        //     // clear the stack
+        //     std::stack<AbstractShow*>().swap(background_shows);
+        // }
+        
+        // the same show
+        if (show_name == show->get_codename()) {
+
+            if (show->state.get_background_flag()) {
+                std::cout << "[STRANGE] NEXT SHOW Keep old show playing..." << std::endl;
+                return;
+            } else {
+                dynamic_cast<TestShow*>(show)->rewind();
+                return;
+            }
+
+
+        }
+        
+        // stop or hide current
+        if (show->state.get_background_flag()) {
+            std::cout << "set background show " 
+                << show->get_codename() << " (visible to FALSE)" 
+                << std::endl;
+            show->state.set_visible(false);
+        } else {
+            show->stop();
+        }
+        
+        std::cout << "Next show: " << show_name << std::endl;
+        *current_show = show_buffer[show_name];
+        show = *current_show;
+        // show->state.set_playing(true);
+        if (show->state.get_background_flag()) {
+            std::cout << "PUSH background show " << show->get_codename() << std::endl;
+            background_shows.push(show);
+        }
+        
+        show_ended = \
+                std::async(std::launch::async, &TestShow::send_blocking, dynamic_cast<TestShow*>(show));
+
+    } else if (action == "stop") {
+        if (show_name == show->get_codename()) {
+            std::cout << "FORCE STOP show " << show_name << std::endl;
+            show->state.force_stop();
+        } else if (!background_shows.empty() && show_name == background_shows.top()->get_codename()) {
+            std::cout << "FORCE STOP background show " << show_name << std::endl;
+            background_shows.top()->state.force_stop();
+        }
+    } else {
+        std::cout << "Unknown action " << action << std::endl;
+    }
+}
+
+void on_show_ended(
+    const std::string& show_name,
+    AbstractShow** current_show,
+    std::stack<AbstractShow*>& background_shows,
+    std::map<std::string, TestShow*>& show_buffer)
+{
+    AbstractShow* show = *current_show;
+
+    std::cout << "on_show_ended " << show_name << std::endl;
+    // another show is playing
+    std::cout << "current show " << show->get_codename() << std::endl;
+    if (show->get_codename() != show_name) {
+        std::cout << "nothing" << std::endl;
+        return;
+    }
+
+    if (background_shows.size() > 1) {
+        AbstractShow* background_show = background_shows.top();
+        if (background_show->state.is_force_stopped()) {
+            std::cout << "POP background show " << background_show->get_codename() << std::endl;
+            background_shows.pop();
+        }
+    }
+
+    if (!background_shows.empty()) {
+        AbstractShow* background_show = background_shows.top();
+        std::cout << "Return to background show " << background_show->get_codename() << " (visible to TRUE)" << std::endl;
+        *current_show = background_show;
+        show = *current_show;
+        show->state.set_visible(true);
+    }
+}
+
 int main(int argc, char const *argv[])
 {
     std::string contents = get_file_contents("config.yml");
@@ -100,6 +222,9 @@ int main(int argc, char const *argv[])
 
     std::string show_file{"test.pcapng"};
     std::string show_name = "music of happy pigs";
+
+    std::condition_variable cv;
+    std::mutex cv_m;
 
     std::mutex pixels_mutex;
     std::map<int, std::vector<Color>> pixels;
@@ -111,16 +236,15 @@ int main(int argc, char const *argv[])
     for (const auto&[show_name, show] : show_buffer) {
         show->pixels = &pixels;
         show->pixels_mutex = &pixels_mutex;
+
     }
 
-    std::stack<AbstractShow*> background_shows;
     // std::atomic<bool> backend_listening = true;
     // std::mutex show_mutex;
-
-    background_shows.push(show_buffer["background_show"]);
+    
 
     // get signals from the game and create next show
-    auto signal_listener = std::thread([&background_shows, &show_buffer](){
+    auto message_listener = std::thread([&show_buffer](){
         // initialize the zmq context with a single IO thread
         zmq::context_t context{1};
         // construct a SUB socket and bind to interface
@@ -131,93 +255,40 @@ int main(int argc, char const *argv[])
         socket.bind("tcp://*:5555");
 
         AbstractShow* show = nullptr;
+        std::stack<AbstractShow*> background_shows;
+        show = show_buffer["background_show"];
+        background_shows.push(show);
+        dynamic_cast<TestShow*>(show)->send_async();
+
         // AbstractShow* next_show = nullptr;
         TimePoint last_message_time = TimePoint();
         
-        std::future<ParsedMessage> result;
+        std::future<ParsedMessage> message_parsed;
+        std::future<std::string> show_ended;
+
         while (true) {
-            if (!result.valid()) {
-                result = \
+            if (!message_parsed.valid()) {
+                message_parsed = \
                     std::async(std::launch::async, receive_and_parse, std::ref(socket));
-                continue;
             }
-            if (!is_future_ready(result)) {
-                continue;
+
+            if (is_future_ready(message_parsed)) {
+                const auto [action, show_name] = message_parsed.get();
+                process_command(action, show_name, &show, show_ended, background_shows, show_buffer, last_message_time);
+                // and start receiving already
+                message_parsed = \
+                    std::async(std::launch::async, receive_and_parse, std::ref(socket));
             }
             
-            // std::packaged_task<ParsedMessage(zmq::socket_t&)> task(receive_and_parse);
-            // const auto [action, show_name] = receive_and_parse(socket);
-            // std::future<ParsedMessage> result = task.get_future();
-            // block
-            // task(socket);
-            // std::thread task_td(std::move(task), std::ref(socket));
-            // task_td.join();
-
-            const auto [action, show_name] = result.get();
-
-            if (!show_buffer.contains(show_name)) {
-                // std::cout << "No mapping for '" << show_name << "'" << std::endl;
-                continue;
+            if (show_ended.valid() && is_future_ready(show_ended)) {
+                std::string show_name = show_ended.get();
+                on_show_ended(show_name, &show, background_shows, show_buffer);
             }
 
-            TimePoint message_time = Clock::now();
-            uint64_t time_past = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    message_time - last_message_time).count();
-            last_message_time = message_time;
-            std::cout << "[" 
-                << time_past
-                << "] Action: " << action
-                << " show " << show_name
-                << std::endl;
-
-            // std::lock_guard<std::mutex> lock(show_mutex);
-            
-            if (action == "select" || action == "play") {
-                // if (action == "select") {
-                //     // clear the stack
-                //     std::stack<AbstractShow*>().swap(background_shows);
-                // }
-                
-                // background music repeats the "start" command
-                if (show 
-                        && show_name == show->get_codename()
-                        && show->state.get_background_flag()) {
-                    std::cout << "[STRANGE] NEXT SHOW Keep old show playing..." << std::endl;
-                    continue;
-                }
-                
-                if (show) {
-                    std::cout << "Stop current show " << show->get_codename() << std::endl;
-                    if (show->state.get_background_flag()) {
-                        std::cout << "set background show " 
-                            << show->get_codename() << " (visible to FALSE)" 
-                            << std::endl;
-                        show->state.set_visible(false);
-                    }
-                    show->stop();
-                }
-                
-                std::cout << "Next show: " << show_name << std::endl;
-                show = show_buffer[show_name];
-                if (show->state.get_background_flag()) {
-                    std::cout << "PUSH background show " << show->get_codename() << std::endl;
-                    background_shows.push(show);
-                }
-                show->send();
-            } else if (action == "stop") {
-                if (show && show_name == show->get_codename()) {
-                    std::cout << "FORCE STOP show " << show_name << std::endl;
-                    show->state.force_stop();
-                } else if (!background_shows.empty() && show_name == background_shows.top()->get_codename()) {
-                    std::cout << "FORCE STOP background show " << show_name << std::endl;
-                    background_shows.top()->state.force_stop();
-                }
-            } else {
-                std::cout << "Unknown action " << action << std::endl;
-            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(16)); // FPS 60 // TODO
         }
     });
-    signal_listener.detach();
+    message_listener.detach();
 
     const int screenWidth = 800;
     const int screenHeight = 450;

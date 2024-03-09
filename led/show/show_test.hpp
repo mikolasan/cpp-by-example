@@ -1,3 +1,4 @@
+#include <condition_variable>
 #include <map>
 #include <mutex>
 #include <stdint.h>
@@ -21,16 +22,22 @@ public:
         ShowCached(codename, filename)
     {}
 
-    // void send() override {
-    //     play();
-    // }
-
     void send() override {
-        sender = std::thread([this](){
+        throw std::runtime_error("TestShow send not implemented");
+        play();
+    }
+
+    std::string send_blocking() {
+        play();
+        return codename;
+    }
+    void send_async() {
+        std::thread t([this](){
             play();
         });
-        sender.detach();
+        t.detach();
     }
+
 protected:
     size_t do_send(const std::string_view& data) override {
         std::string data_copy(data.data(), data.size());
@@ -52,6 +59,7 @@ protected:
     }
 
 public:
+    std::condition_variable cv;
     std::mutex *pixels_mutex;
     std::map<int, std::vector<Color>> *pixels;
 private:

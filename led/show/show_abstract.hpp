@@ -16,6 +16,7 @@ public:
         background(false),
         loop(false),
         ignore_stop(false),
+        visible(true),
         show_playing(false),
         force_stopped(false)
     {}
@@ -44,6 +45,10 @@ public:
 
     bool is_playing() const {
         return show_playing;
+    }
+
+    void set_playing(bool flag) {
+        show_playing = flag;
     }
 
     bool needs_to_play() const {
