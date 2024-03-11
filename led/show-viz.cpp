@@ -2,6 +2,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstdint>
+#include <deque>
 #include <future>
 #include <map>
 #include <mutex>
@@ -64,8 +65,11 @@ bool is_future_ready(std::future<R> const& f)
     return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
 }
 
+using ShowPlayingFuture = std::future<std::string>;
+
 // (action, show_name)
 using ParsedMessage = std::tuple<std::string, std::string>;
+
 ParsedMessage receive_and_parse(zmq::socket_t& socket)
 {
     zmq::message_t request;
@@ -104,7 +108,7 @@ void process_command(
     const std::string& action,
     const std::string& show_name,
     AbstractShow** current_show,
-    std::future<std::string>& show_ended,
+    std::deque<ShowPlayingFuture>& show_futures,
     std::stack<AbstractShow*>& background_shows,
     std::map<std::string, TestShow*>& show_buffer,
     TimePoint& last_message_time)
@@ -166,8 +170,13 @@ void process_command(
             background_shows.push(show);
         }
         
-        show_ended = \
-                std::async(std::launch::async, &TestShow::send_blocking, dynamic_cast<TestShow*>(show));
+        // ShowPlayingFuture show_ended = \
+        //         std::async(std::launch::async, &TestShow::send_blocking, dynamic_cast<TestShow*>(show));
+        // show_futures.push_back(std::move(show_ended));
+
+        show_futures.emplace_back(
+                std::async(std::launch::async, &TestShow::send_blocking, dynamic_cast<TestShow*>(show))
+        );
 
     } else if (action == "stop") {
         if (show_name == show->get_codename()) {
@@ -264,7 +273,7 @@ int main(int argc, char const *argv[])
         TimePoint last_message_time = TimePoint();
         
         std::future<ParsedMessage> message_parsed;
-        std::future<std::string> show_ended;
+        std::deque<ShowPlayingFuture> show_futures;
 
         while (true) {
             if (!message_parsed.valid()) {
@@ -274,15 +283,23 @@ int main(int argc, char const *argv[])
 
             if (is_future_ready(message_parsed)) {
                 const auto [action, show_name] = message_parsed.get();
-                process_command(action, show_name, &show, show_ended, background_shows, show_buffer, last_message_time);
+                process_command(action, show_name, &show, show_futures, background_shows, show_buffer, last_message_time);
                 // and start receiving already
                 message_parsed = \
                     std::async(std::launch::async, receive_and_parse, std::ref(socket));
             }
             
-            if (show_ended.valid() && is_future_ready(show_ended)) {
-                std::string show_name = show_ended.get();
-                on_show_ended(show_name, &show, background_shows, show_buffer);
+            if (!show_futures.empty()) {
+                for (auto it = show_futures.begin(); it != show_futures.end();) {
+                    ShowPlayingFuture& show_ended = *it;
+                    if (is_future_ready(show_ended)) {
+                        std::string show_name = show_ended.get();
+                        on_show_ended(show_name, &show, background_shows, show_buffer);
+                        it = show_futures.erase(it);
+                    } else {
+                        ++it;
+                    }
+                }
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(16)); // FPS 60 // TODO

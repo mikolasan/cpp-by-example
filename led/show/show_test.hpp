@@ -1,4 +1,4 @@
-#include <condition_variable>
+// #include <condition_variable>
 #include <map>
 #include <mutex>
 #include <stdint.h>
@@ -24,7 +24,6 @@ public:
 
     void send() override {
         throw std::runtime_error("TestShow send not implemented");
-        play();
     }
 
     std::string send_blocking() {
@@ -59,11 +58,10 @@ protected:
     }
 
 public:
-    std::condition_variable cv;
+    //std::condition_variable cv;
     std::mutex *pixels_mutex;
     std::map<int, std::vector<Color>> *pixels;
 private:
     using ArtnetReceiver = arx::artnet::Receiver<TestStream>;
     ArtnetReceiver artnet;
-    std::thread sender;
 };
