@@ -1,7 +1,7 @@
 #include <stdexcept>
 #include <string.h> // strerror
 
-#include "network.h"
+#include "udp_sender.h"
 
 network_error::network_error(const std::string& function_name, int code) {
     message = "[";

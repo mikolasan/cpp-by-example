@@ -13,22 +13,32 @@ class ShowUdpCached : public ShowCached {
 public:
     ShowUdpCached(
         const std::string& codename,
-        const std::string& filename,
-        const std::string& hostname
+        const std::string& filename
     ) :
-        ShowCached(codename, filename),
-        hostname(hostname)
+        ShowCached(codename, filename)
     {}
 
     void send() override {
         std::cout << "SEND " << codename << std::endl;
         udp_sender = std::make_unique<UdpSender>();
-        udp->set_destination(hostname, port);
+        udp_sender->set_destination(hostname, port);
         if (hostname.ends_with("255")) {
-            udp->enable_broadcast();
+            udp_sender->enable_broadcast();
         }
         
         play(); // --> do_send
+    }
+
+    std::string send_blocking() {
+        send();
+        return codename;
+    }
+
+    void send_async() {
+        std::thread t([this](){
+            send();
+        });
+        t.detach();
     }
 
 protected:
@@ -50,7 +60,8 @@ protected:
     //     cache(filename)
     // }
 
-protected:
+public:
     std::string hostname;
+protected:
     std::unique_ptr<UdpSender> udp_sender;
 };

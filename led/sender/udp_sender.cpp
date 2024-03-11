@@ -7,14 +7,16 @@
 
 #include "udp_sender.h"
 
+
 UdpSender::UdpSender() {
     sock = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock == -1) {
         throw network_error("socket", errno);
     }
+    static uint16_t udp_port = 10000;
     sockaddr_in local;
     local.sin_family = AF_INET;
-    local.sin_port = 10000; // random port
+    local.sin_port = udp_port++;
     local.sin_addr.s_addr = htonl(INADDR_ANY);
     int result = ::bind(sock, reinterpret_cast<sockaddr*>(&local), sizeof(local));
     if (result == -1) {

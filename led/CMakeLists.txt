@@ -49,3 +49,29 @@ target_link_libraries(show_viz
   raylib
   zmq
 )
+
+
+add_executable(led_proxy_next 
+  led-proxy-next.cpp
+  sender/network_error.cpp
+  sender/udp_sender.cpp
+  show/show.cpp
+  show/show_abstract.cpp
+)
+
+target_include_directories(led_proxy_next PRIVATE
+  ./
+  sender
+  show
+  stream
+  cppzmq
+  ../thirdparty/rapidyaml/src
+)
+target_link_directories(led_proxy_next PRIVATE thirdparty/lib)
+target_link_libraries(led_proxy_next 
+  pcap
+  pthread
+  ryml
+  raylib
+  zmq
+)
