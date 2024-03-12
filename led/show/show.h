@@ -15,4 +15,4 @@ using Data = std::string_view;
 using PacketList = std::list<std::tuple<Data, Duration, Duration>>;
 
 std::string get_file_contents(const char *filename);
-std::tuple<PacketList, uint64_t> cache_file(const std::string& filename);
+std::tuple<PacketList, Duration> cache_file(const std::string& filename);

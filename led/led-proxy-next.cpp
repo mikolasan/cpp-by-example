@@ -12,7 +12,6 @@
 #include <thread>
 #include <vector>
 
-#include <raylib.h>
 #include <ryml_std.hpp>
 #include <ryml.hpp>
 #include <zmq.hpp>

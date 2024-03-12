@@ -14,6 +14,7 @@ add_subdirectory(_oop)
 add_subdirectory(_std)
 add_subdirectory(_templates)
 
+add_subdirectory(audio)
 add_subdirectory(big_files)
 add_subdirectory(combinations)
 if(CPP_BY_EXAMPLE_LLVM_READY)

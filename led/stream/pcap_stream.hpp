@@ -103,7 +103,7 @@ public:
             throw std::runtime_error(pcap_geterr(handle));
         }
     }
-
+    
     void dumpPacket() {
         pcap_dump(reinterpret_cast<u_char*>(dumper), header, packet);
     }
@@ -120,6 +120,27 @@ public:
 
     void wait() const {
         std::this_thread::sleep_for(wait_duration_nsec);
+    }
+
+    void setDuration(std::chrono::nanoseconds wait_duration) {
+        using namespace std::chrono;
+        std::cout << "set duration" << std::endl;
+        std::cout << "From " 
+            << wait_duration_nsec.count() << " | " 
+            << last_packet_point.value().time_since_epoch().count() << " | "
+            << header->ts.tv_sec << " | " << header->ts.tv_usec << std::endl;
+        TimePoint new_point = last_packet_point.value() - wait_duration_nsec + wait_duration;
+        Duration duration = new_point.time_since_epoch();
+        // nanoseconds = (header->ts.tv_sec * 1000000 + header->ts.tv_usec) * 1000
+        // Convert nanoseconds to seconds and remaining microseconds
+        seconds secs = duration_cast<seconds>(duration);
+        header->ts.tv_sec = secs.count();
+        nanoseconds remaining = duration - secs;
+        header->ts.tv_usec = duration_cast<microseconds>(remaining).count();
+        std::cout << "To " 
+            << wait_duration.count() << " | " 
+            << new_point.time_since_epoch().count() << " | "
+            << header->ts.tv_sec << " | " << header->ts.tv_usec << std::endl;
     }
 
     IPAddress remoteIP() const { return remote_ip; }
