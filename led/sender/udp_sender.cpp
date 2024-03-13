@@ -13,7 +13,7 @@ UdpSender::UdpSender() {
     if (sock == -1) {
         throw network_error("socket", errno);
     }
-    static uint16_t udp_port = 10020;
+    static uint16_t udp_port = 10000;
     sockaddr_in local;
     local.sin_family = AF_INET;
     local.sin_port = udp_port++;

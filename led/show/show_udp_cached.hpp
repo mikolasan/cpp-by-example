@@ -19,12 +19,12 @@ public:
     {}
 
     void send() override {
-        std::cout << "SEND " << codename << std::endl;
-        udp_sender = std::make_unique<UdpSender>();
-        udp_sender->set_destination(hostname, port);
-        if (hostname.ends_with("255")) {
-            udp_sender->enable_broadcast();
-        }
+        // std::cout << "SEND " << codename << std::endl;
+        // udp_sender = std::make_unique<UdpSender>();
+        // udp_sender->set_destination(hostname, port);
+        // if (hostname.ends_with("255")) {
+        //     udp_sender->enable_broadcast();
+        // }
         
         play(); // --> do_send
     }
@@ -44,10 +44,17 @@ public:
 protected:
     size_t do_send(const std::string_view& data) override {
         size_t sent_bytes = 0;
-        if (!udp_sender) return sent_bytes;
+        // if (!udp_sender) {
+        //     throw std::runtime_error("no UDP sender");
+        // }
         
         try {
-            udp_sender->send(std::get<0>(*current_packet));
+            if (auto p = udp_sender.lock()) {
+                // std::cout << "\tobserve() is able to lock weak_ptr<>\n";
+                p->send(std::get<0>(*current_packet));
+            } else {
+                std::cout << "\tdo_send() is unable to lock weak_ptr<>\n";
+            }
         } catch (const network_error& e) {
             std::cerr << e.what() << std::endl;
         } catch (const std::exception& e) {
@@ -61,7 +68,8 @@ protected:
     // }
 
 public:
-    std::string hostname;
+    // std::string hostname;
+    std::weak_ptr<UdpSender> udp_sender;
 protected:
-    std::unique_ptr<UdpSender> udp_sender;
+    //
 };

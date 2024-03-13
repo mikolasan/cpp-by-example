@@ -212,8 +212,12 @@ int main(int argc, char const *argv[])
     std::string hostname;
     tree["hostname"] >> hostname;
 
+    const uint16_t port = 6454;
+    std::shared_ptr<UdpSender> udp_sender(new UdpSender);
+    udp_sender->set_destination(hostname, port);
+
     for (const auto&[show_name, show] : show_buffer) {
-        show->hostname = hostname;
+        show->udp_sender = udp_sender;
     }
 
     // get signals from the game and create next show
