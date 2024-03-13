@@ -6,6 +6,8 @@
 #include <ryml.hpp>
 #include <ryml_std.hpp>
 
+#include <show_abstract.hpp>
+
 template <
     typename Show,
     typename = typename std::enable_if<
@@ -15,7 +17,7 @@ template <
 std::map<std::string, Show*> read_show_mapping(std::string config) {
     namespace fs = std::filesystem;
 
-    ryml::Tree tree = ryml::parse(ryml::to_csubstr(config));
+    ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(config));
     std::string show_dir;
     tree["show_dir"] >> show_dir;
 

@@ -75,16 +75,19 @@ target_link_libraries(led_proxy_next
 
 add_executable(clean_recording 
   tools/clean-recording.cpp
+  show/show.cpp
   stb_vorbis.c
 )
 target_include_directories(clean_recording PRIVATE
   ./
   show
   stream
+  ../thirdparty/rapidyaml/src
 )
 target_link_libraries(clean_recording 
   pcap
   pthread
+  ryml
 )
 
 

@@ -7,6 +7,8 @@
 #include <thread>
 #include <vector>
 
+#include <raylib.h>
+
 #include "Artnet.h"
 #include "show_cached.hpp"
 #include "test_stream.hpp"
