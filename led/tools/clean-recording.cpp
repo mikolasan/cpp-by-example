@@ -131,26 +131,54 @@ int main(int argc, char const *argv[])
             auto& stream = artnet.getStream();
             stream.output(output);
             Duration total_duration{0};
+            Duration total_show_duration{0};
             Duration total_out_duration{0};
+            Duration duration_between_packets{0};
+            size_t out_packet_id = 0;
+            
             std::cout << "Writing to '" << output << "'..." << std::endl;
             while (artnet.hasPackets()) {
                 auto code = artnet.parse();
-                if (first_show_packet <= packet_id
-                        && packet_id <= last_show_packet
-                        && code == arx::artnet::OpCode::Dmx || code == arx::artnet::OpCode::Sync) {
-                    auto duration = stream.getDuration();
-                    total_duration += duration;
-                    if (total_out_duration < audio_duration) {
-                        if (total_out_duration + duration > audio_duration) {
-                            duration = audio_duration - total_out_duration;
-                            std::cout << "final length " << std::chrono::duration_cast<std::chrono::microseconds>(total_out_duration).count() << std::endl;
-                            std::cout << "new last frame duration: " << duration.count() << std::endl;
-                            stream.setDuration(duration);
+                auto duration = stream.getDuration();
+                total_duration += duration;
+                
+                if (first_show_packet <= packet_id && packet_id <= last_show_packet) {
+                    if (out_packet_id > 0) {
+                        total_show_duration += duration; // skip the first duration
+                        duration_between_packets += duration;
+                    }
+                    if (code == arx::artnet::OpCode::Dmx) { //  || code == arx::artnet::OpCode::Sync
+
+                        if (total_out_duration < audio_duration) {
+                            if (total_out_duration + duration_between_packets > audio_duration) {
+                                // update duration only for the last packet ignoring any packets that we skippd
+                                // the pcap library will handle that during the dump
+                                Duration new_duration_between_packets = audio_duration - total_out_duration;
+                                Duration diff = duration_between_packets - new_duration_between_packets;
+                                // std::cout << "final length " << std::chrono::duration_cast<std::chrono::microseconds>(total_out_duration).count() << std::endl;
+                                // std::cout << "new last frame duration: " << duration_between_packets.count() << std::endl;
+                                stream.setDuration(duration - diff);
+                                duration_between_packets = new_duration_between_packets;
+                            }
+
+                            total_out_duration += duration_between_packets;
+                            // std::cout << out_packet_id << " "
+                            //     << duration_between_packets.count() << " "
+                            //     << total_out_duration.count() << std::endl;
+                        
+                            stream.dumpPacket();
+                            
+                            ++out_packet_id;
+                            duration_between_packets = std::chrono::nanoseconds(0);
+                        } else {
+                            // std::cout << "{{beyond audio}} "
+                            //     << duration.count() << " "
+                            //     << total_show_duration.count() << std::endl;
                         }
-                        stream.dumpPacket();
-                        total_out_duration += duration;
                     } else {
-                        std::cout << "1" << std::endl;
+                        // std::cout << "<<skip packet>> "
+                        //     << duration.count() << " "
+                        //     << total_show_duration.count() << std::endl;
                     }
                 }
                 ++packet_id;
@@ -162,7 +190,7 @@ int main(int argc, char const *argv[])
                 << std::chrono::duration_cast<std::chrono::microseconds>(total_out_duration).count()
                 << " usec" << std::endl;
             std::cout << "Captured show duration: " 
-                << std::chrono::duration_cast<std::chrono::microseconds>(total_duration).count()
+                << std::chrono::duration_cast<std::chrono::microseconds>(total_show_duration).count()
                 << " usec" << std::endl;
         }
     } catch (const std::runtime_error& e) {

@@ -23,10 +23,6 @@
 using Show = ShowUdpCached;
 using namespace std::chrono_literals;
 
-const int n_leds_per_universe = 170;
-const int max_leds_per_row = 50;
-const int led_size = 10;
-
 // (select|play|stop):(game_name):(sound_name)
 const std::regex message_regex("(\\w*)\\|([a-z_]*)\\|(.*)", std::regex_constants::ECMAScript);
 

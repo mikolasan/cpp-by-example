@@ -30,7 +30,7 @@ public:
     void play() override {
         state.play();
         TimePoint start_show_time = Clock::now();
-        // TimePoint total_play_time = start_show_time;
+        TimePoint total_play_time = start_show_time;
         do {
             std::cout << "-- start [" 
                 << std::chrono::duration_cast<std::chrono::milliseconds>(length).count()
@@ -82,17 +82,17 @@ public:
                 std::cerr << e.what() << '\n';
             }
             
-            // TimePoint send_time = Clock::now();
-            // int64_t total_diff = std::chrono::duration_cast<std::chrono::microseconds>(
-            //     send_time - total_play_time).count();
-            // std::cout << total_diff << " usec past since start" << std::endl;
-            // Duration send_duration = send_time - start_show_time;
-            // int64_t diff = std::chrono::duration_cast<std::chrono::microseconds>(
-            //     send_duration).count();
-            // std::cout << diff << " usec past" << std::endl;
-            // int64_t drift = std::chrono::duration_cast<std::chrono::microseconds>(
-            //     send_duration - length).count();
-            // std::cout << drift << " usec drift" << std::endl;
+            TimePoint send_time = Clock::now();
+            int64_t total_diff = std::chrono::duration_cast<std::chrono::microseconds>(
+                send_time - total_play_time).count();
+            std::cout << total_diff << " usec past since start" << std::endl;
+            Duration send_duration = send_time - start_show_time;
+            int64_t diff = std::chrono::duration_cast<std::chrono::microseconds>(
+                send_duration).count();
+            std::cout << diff << " usec past" << std::endl;
+            int64_t drift = std::chrono::duration_cast<std::chrono::microseconds>(
+                send_duration - length).count();
+            std::cout << drift << " usec drift" << std::endl;
             std::cout << "-- end " << codename << std::endl;
 
             start_show_time = start_show_time + length;

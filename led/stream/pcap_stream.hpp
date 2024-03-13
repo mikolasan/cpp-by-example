@@ -61,7 +61,9 @@ public:
             return 0;
         }
 
-        const Clock::duration duration = std::chrono::nanoseconds((header->ts.tv_sec * 1000000 + header->ts.tv_usec) * 1000);
+        std::chrono::seconds packet_seconds(header->ts.tv_sec);
+        std::chrono::microseconds packet_microseconds(header->ts.tv_usec);
+        const Clock::duration duration = packet_seconds + packet_microseconds; //std::chrono::nanoseconds((header->ts.tv_sec * 1000000 + header->ts.tv_usec) * 1000);
         const TimePoint time_point(duration);
         if (last_packet_point) {
             wait_duration_nsec = std::chrono::duration_cast<Duration>(time_point - last_packet_point.value());

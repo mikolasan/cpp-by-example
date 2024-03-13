@@ -158,7 +158,19 @@ void process_command(
                 << std::endl;
             show->state.set_visible(false);
         } else {
-            show->stop();
+            if (show_buffer[show_name]->state.get_background_flag()) {
+                std::cout << "finish current show, start background hidden" << std::endl;
+                // ignore background show
+                TestShow* bg_show = show_buffer[show_name];
+                background_shows.push(bg_show);
+                bg_show->state.set_visible(false);
+                show_futures.emplace_back(
+                    std::async(std::launch::async, &TestShow::send_blocking, dynamic_cast<TestShow*>(bg_show))
+                );
+                return;
+            } else {
+                show->stop();
+            }
         }
         
         std::cout << "Next show: " << show_name << std::endl;
