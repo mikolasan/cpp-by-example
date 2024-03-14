@@ -11,7 +11,6 @@
 #include <ryml.hpp>
 #include <stb_vorbis.h>
 
-
 #include "Artnet.h"
 #include "config.hpp"
 #include "pcap_stream.hpp"

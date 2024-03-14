@@ -208,7 +208,7 @@ int main(int argc, char const *argv[])
     std::string contents = get_file_contents("config.yml");
     std::map<std::string, Show*> show_buffer = read_show_mapping<Show>(contents);
 
-    ryml::Tree tree = ryml::parse(ryml::to_csubstr(contents));
+    ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(contents));
     std::string hostname;
     tree["hostname"] >> hostname;
 

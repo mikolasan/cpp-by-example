@@ -31,45 +31,24 @@ public:
         state.play();
         TimePoint start_show_time = Clock::now();
         TimePoint total_play_time = start_show_time;
+        
         do {
-            std::cout << "-- start [" 
-                << std::chrono::duration_cast<std::chrono::milliseconds>(length).count()
-                << "] "
-                << codename 
-                << std::endl;
+            uint64_t length_usec = std::chrono::duration_cast<std::chrono::milliseconds>(length).count();
+            std::cout << "-- start (length "  << length_usec << ") " << codename  << std::endl;
+
             current_packet = udp_cache.begin();
             try {
-                // int64_t expected_wait = 0;
                 do {
                     Duration time_from_start = std::get<2>(*current_packet);
                     auto expected_time = start_show_time + time_from_start;
-                    // expected_wait += std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    //     std::get<1>(*current_packet)).count();
-                    // if (expected_wait < 100 /* ns */) {
-                    //     ++current_packet;
-                    //     continue;
-                    // }
-                    // expected_wait = 0;
-
                     if (time_from_start.count() > 0) {
                         std::this_thread::sleep_until(expected_time);
                     }
                     
-                    // if (diff > 100) {
-                        
-                        // int64_t expected_wait = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                        //     std::get<1>(*current_packet)).count();
-                        // std::cout << "!!! Diff in send " 
-                        //     << diff
-                        //     << " expected wait " << expected_wait
-                        //     << " ns"
-                        //     << std::endl;
+                    if (state.get_visible_flag()) {
+                        int n_bytes = do_send(std::get<0>(*current_packet));
+                    }
 
-                    // } else {
-                        if (state.get_visible_flag()) {
-                            int n_bytes = do_send(std::get<0>(*current_packet));
-                        }
-                    // }
                     if (rewind_set) {
                         current_packet = udp_cache.begin();
                         start_show_time = Clock::now();
@@ -78,24 +57,14 @@ public:
                         ++current_packet;
                     }
                 } while (current_packet != udp_cache.end() && state.is_playing());
+
             } catch (const std::exception& e) {
                 std::cerr << e.what() << '\n';
             }
             
-            TimePoint send_time = Clock::now();
-            int64_t total_diff = std::chrono::duration_cast<std::chrono::microseconds>(
-                send_time - total_play_time).count();
-            std::cout << total_diff << " usec past since start" << std::endl;
-            Duration send_duration = send_time - start_show_time;
-            int64_t diff = std::chrono::duration_cast<std::chrono::microseconds>(
-                send_duration).count();
-            std::cout << diff << " usec past" << std::endl;
-            int64_t drift = std::chrono::duration_cast<std::chrono::microseconds>(
-                send_duration - length).count();
-            std::cout << drift << " usec drift" << std::endl;
             std::cout << "-- end " << codename << std::endl;
-
             start_show_time = start_show_time + length;
+
         } while (state.is_playing() && state.needs_to_play());
     }
 
