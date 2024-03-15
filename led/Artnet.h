@@ -197,6 +197,7 @@ namespace artnet {
         uint8_t physical() const { return phy; }
 
         void inc_sequence() { ++seq; }
+        void set_sequence(uint8_t new_seq) { seq = new_seq; }
         uint8_t sequence() const { return seq; }
 
     protected:
@@ -484,8 +485,8 @@ namespace artnet {
             this->Receiver_<S>::attach(stream, subscribe_net, subscribe_subnet);
         }
 
-        void parse() {
-            this->Receiver_<S>::parse();
+        S& getStream() {
+            return stream;
         }
     };
 

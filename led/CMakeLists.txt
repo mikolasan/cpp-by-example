@@ -56,6 +56,7 @@ add_executable(led_proxy_next
   sender/udp_sender.cpp
   show/show.cpp
   show/show_abstract.cpp
+  show/show_udp_cached.cpp
 )
 target_include_directories(led_proxy_next PRIVATE
   ./

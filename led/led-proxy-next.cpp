@@ -218,6 +218,7 @@ int main(int argc, char const *argv[])
 
     for (const auto&[show_name, show] : show_buffer) {
         show->udp_sender = udp_sender;
+        show->set_sender(udp_sender);
     }
 
     // get signals from the game and create next show

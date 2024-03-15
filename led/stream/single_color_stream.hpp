@@ -8,8 +8,7 @@ const uint16_t port = 6454;
 
 class SingleColorStream {
 public:
-    SingleColorStream() {
-    }
+    SingleColorStream() {}
     
     void begin(uint16_t port) {
         // does nothing
