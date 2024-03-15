@@ -111,7 +111,11 @@ void process_command(
                 std::cout << "[STRANGE] NEXT SHOW Keep old show playing..." << std::endl;
                 return;
             } else {
-                dynamic_cast<Show*>(show)->rewind();
+                if (show->state.get_ignore_stop_flag()) {
+                    std::cout << "NO REWIND" << std::endl;
+                } else {
+                    dynamic_cast<Show*>(show)->rewind();
+                }
                 return;
             }
 
@@ -159,6 +163,10 @@ void process_command(
 
     } else if (action == "stop") {
         if (show_name == show->get_codename()) {
+            if (show->state.get_ignore_stop_flag()) {
+                std::cout << "Ignore stop (!)" << std::endl;
+                return;
+            }
             std::cout << "FORCE STOP show " << show_name << std::endl;
             show->state.force_stop();
         } else if (!background_shows.empty() && show_name == background_shows.top()->get_codename()) {
@@ -182,7 +190,15 @@ void on_show_ended(
     // another show is playing
     std::cout << "current show " << show->get_codename() << std::endl;
     if (show->get_codename() != show_name) {
-        std::cout << "nothing" << std::endl;
+        if (show->state.get_background_flag()) {
+            if (!show->state.get_visible_flag()) {
+                std::cout << "[WARNING] switching to background show (visible to TRUE)" << std::endl;
+                show->state.set_visible(true);
+            }
+        } else {
+            std::cout << "nothing" << std::endl;
+        }
+
         return;
     }
 

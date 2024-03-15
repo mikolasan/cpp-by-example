@@ -19,6 +19,7 @@ public:
         last_sequence(0)
     {
         artnet.begin();
+        artnet.set_physical(1);
     }
 
     void set_sender(const std::shared_ptr<UdpSender>& sender) {
@@ -57,6 +58,7 @@ protected:
             if (sequence != last_sequence) {
                 last_sequence = sequence;
                 ++new_sequence;
+                if (new_sequence == 0) ++new_sequence;
                 artnet.set_sequence(new_sequence);
             }
             artnet.Sender_<SequentialStream>::send(
