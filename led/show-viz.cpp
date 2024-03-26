@@ -1,13 +1,14 @@
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <condition_variable>
 #include <cstdint>
 #include <deque>
 #include <future>
+#include <list>
 #include <map>
 #include <mutex>
 #include <regex>
-#include <stack>
 #include <string>
 #include <thread>
 #include <vector>
@@ -21,6 +22,7 @@
 #include "show_test.hpp"
 #include "config.hpp"
 
+using Show = TestShow;
 using namespace std::chrono_literals;
 
 const int n_leds_per_universe = 170;
@@ -109,8 +111,8 @@ void process_command(
     const std::string& show_name,
     AbstractShow** current_show,
     std::deque<ShowPlayingFuture>& show_futures,
-    std::stack<AbstractShow*>& background_shows,
-    std::map<std::string, TestShow*>& show_buffer,
+    std::list<AbstractShow*>& background_shows,
+    std::map<std::string, Show*>& show_buffer,
     TimePoint& last_message_time)
 {
     AbstractShow* show = *current_show;
@@ -134,7 +136,7 @@ void process_command(
     if (action == "select" || action == "play") {
         // if (action == "select") {
         //     // clear the stack
-        //     std::stack<AbstractShow*>().swap(background_shows);
+        //     std::list<AbstractShow*>().swap(background_shows);
         // }
         
         // the same show
@@ -144,7 +146,9 @@ void process_command(
                 std::cout << "[STRANGE] NEXT SHOW Keep old show playing..." << std::endl;
                 return;
             } else {
-                dynamic_cast<TestShow*>(show)->rewind();
+                if (show->state.is_playing()) {
+                    dynamic_cast<Show*>(show)->rewind();
+                }
                 return;
             }
 
@@ -153,19 +157,19 @@ void process_command(
         
         // stop or hide current
         if (show->state.get_background_flag()) {
-            std::cout << "set background show " 
-                << show->get_codename() << " (visible to FALSE)" 
+            std::cout << "HIDE background show " 
+                << show->get_codename()
                 << std::endl;
             show->state.set_visible(false);
         } else {
             if (show_buffer[show_name]->state.get_background_flag()) {
                 std::cout << "finish current show, start background hidden" << std::endl;
                 // ignore background show
-                TestShow* bg_show = show_buffer[show_name];
-                background_shows.push(bg_show);
+                Show* bg_show = show_buffer[show_name];
+                background_shows.push_front(bg_show);
                 bg_show->state.set_visible(false);
                 show_futures.emplace_back(
-                    std::async(std::launch::async, &TestShow::send_blocking, dynamic_cast<TestShow*>(bg_show))
+                    std::async(std::launch::async, &Show::send_blocking, dynamic_cast<Show*>(bg_show))
                 );
                 return;
             } else {
@@ -173,30 +177,36 @@ void process_command(
             }
         }
         
-        std::cout << "Next show: " << show_name << std::endl;
+        //std::cout << "Next show: " << show_name << std::endl;
         *current_show = show_buffer[show_name];
         show = *current_show;
         // show->state.set_playing(true);
         if (show->state.get_background_flag()) {
             std::cout << "PUSH background show " << show->get_codename() << std::endl;
-            background_shows.push(show);
+            background_shows.push_front(show);
         }
         
-        // ShowPlayingFuture show_ended = \
-        //         std::async(std::launch::async, &TestShow::send_blocking, dynamic_cast<TestShow*>(show));
-        // show_futures.push_back(std::move(show_ended));
-
         show_futures.emplace_back(
-                std::async(std::launch::async, &TestShow::send_blocking, dynamic_cast<TestShow*>(show))
+                std::async(std::launch::async, &Show::send_blocking, dynamic_cast<Show*>(show))
         );
 
     } else if (action == "stop") {
         if (show_name == show->get_codename()) {
+            if (show->state.get_ignore_stop_flag()) {
+                std::cout << "Ignore stop (!)" << std::endl;
+                return;
+            }
             std::cout << "FORCE STOP show " << show_name << std::endl;
             show->state.force_stop();
-        } else if (!background_shows.empty() && show_name == background_shows.top()->get_codename()) {
-            std::cout << "FORCE STOP background show " << show_name << std::endl;
-            background_shows.top()->state.force_stop();
+        } else if (!background_shows.empty()) {
+            auto it = std::find_if(
+                background_shows.begin(),
+                background_shows.end(),
+                [&show_name](const AbstractShow* s) { return s->get_codename() == show_name; });
+            if (it != background_shows.end()) {
+                std::cout << "FORCE STOP background show " << show_name << std::endl;
+                (*it)->state.force_stop();
+            }
         }
     } else {
         std::cout << "Unknown action " << action << std::endl;
@@ -206,8 +216,8 @@ void process_command(
 void on_show_ended(
     const std::string& show_name,
     AbstractShow** current_show,
-    std::stack<AbstractShow*>& background_shows,
-    std::map<std::string, TestShow*>& show_buffer)
+    std::list<AbstractShow*>& background_shows,
+    std::map<std::string, Show*>& show_buffer)
 {
     AbstractShow* show = *current_show;
 
@@ -215,21 +225,35 @@ void on_show_ended(
     // another show is playing
     std::cout << "current show " << show->get_codename() << std::endl;
     if (show->get_codename() != show_name) {
-        std::cout << "nothing" << std::endl;
+        if (show->state.get_background_flag()) {
+            if (!show->state.get_visible_flag()) {
+                std::cout << "[WARNING] SHOW background show " 
+                    << show->get_codename()
+                    << std::endl;
+                show->state.set_visible(true);
+            }
+        } else {
+            std::cout << "nothing" << std::endl;
+        }
+
         return;
+    // } else if (show_name == "cauldrons_of_fortune|Wild.ogg") {
+    //     return;
     }
 
-    if (background_shows.size() > 1) {
-        AbstractShow* background_show = background_shows.top();
+    while (background_shows.size() > 1) {
+        AbstractShow* background_show = background_shows.front();
         if (background_show->state.is_force_stopped()) {
             std::cout << "POP background show " << background_show->get_codename() << std::endl;
-            background_shows.pop();
+            background_shows.pop_front();
+        } else {
+            break;
         }
     }
 
     if (!background_shows.empty()) {
-        AbstractShow* background_show = background_shows.top();
-        std::cout << "Return to background show " << background_show->get_codename() << " (visible to TRUE)" << std::endl;
+        AbstractShow* background_show = background_shows.front();
+        std::cout << "SHOW background show " << background_show->get_codename() << std::endl;
         *current_show = background_show;
         show = *current_show;
         show->state.set_visible(true);
@@ -239,7 +263,7 @@ void on_show_ended(
 int main(int argc, char const *argv[])
 {
     std::string contents = get_file_contents("config.yml");
-    std::map<std::string, TestShow*> show_buffer = read_show_mapping<TestShow>(contents);
+    std::map<std::string, Show*> show_buffer = read_show_mapping<Show>(contents);
 
     std::string show_file{"test.pcapng"};
     std::string show_name = "music of happy pigs";
@@ -276,10 +300,10 @@ int main(int argc, char const *argv[])
         socket.bind("tcp://*:5555");
 
         AbstractShow* show = nullptr;
-        std::stack<AbstractShow*> background_shows;
+        std::list<AbstractShow*> background_shows;
         show = show_buffer["background_show"];
-        background_shows.push(show);
-        dynamic_cast<TestShow*>(show)->send_async();
+        background_shows.push_front(show);
+        dynamic_cast<Show*>(show)->send_async();
 
         // AbstractShow* next_show = nullptr;
         TimePoint last_message_time = TimePoint();

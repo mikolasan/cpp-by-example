@@ -50,6 +50,7 @@ public:
                     }
 
                     if (rewind_set) {
+                        state.play();
                         current_packet = udp_cache.begin();
                         start_show_time = Clock::now();
                         rewind_set = false;

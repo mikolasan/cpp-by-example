@@ -66,18 +66,40 @@ protected:
                 static_cast<uint32_t>(universe),
                 artnet.Receiver_<SequentialStream>::data(),
                 artnet.Receiver_<SequentialStream>::size());
-        } else {
-            if (auto p = udp_sender.lock()) {
-                try {
-                    sent_bytes = p->send(data);
-                } catch (const network_error& e) {
-                    std::cerr << e.what() << std::endl;
-                } catch (const std::exception& e) {
-                    std::cerr << e.what() << '\n';
+            
+            if (universe == 3) {
+                if (auto p = udp_sender.lock()) {
+                    try {
+                        char sync[14] = {
+                            'A','r','t','-','N','e','t','\0', // id
+                            0x00, 0x52, // opcode
+                            0x00, 14, // protocol version
+                            0x00, 0x00, // aux
+                        };
+                        std::string_view sync_data(sync, 14);
+                        sent_bytes = p->send(sync_data);
+                    } catch (const network_error& e) {
+                        std::cerr << e.what() << std::endl;
+                    } catch (const std::exception& e) {
+                        std::cerr << e.what() << '\n';
+                    }
+                } else {
+                    std::cout << "\tdo_send() is unable to lock weak_ptr<>\n";
                 }
-            } else {
-                std::cout << "\tdo_send() is unable to lock weak_ptr<>\n";
             }
+        } else {
+            // std::cout << "Skip sending" << std::endl;
+            // if (auto p = udp_sender.lock()) {
+            //     try {
+            //         sent_bytes = p->send(data);
+            //     } catch (const network_error& e) {
+            //         std::cerr << e.what() << std::endl;
+            //     } catch (const std::exception& e) {
+            //         std::cerr << e.what() << '\n';
+            //     }
+            // } else {
+            //     std::cout << "\tdo_send() is unable to lock weak_ptr<>\n";
+            // }
         }
 
         return sent_bytes;
