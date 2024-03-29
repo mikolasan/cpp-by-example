@@ -265,9 +265,6 @@ int main(int argc, char const *argv[])
     std::string contents = get_file_contents("config.yml");
     std::map<std::string, Show*> show_buffer = read_show_mapping<Show>(contents);
 
-    std::string show_file{"test.pcapng"};
-    std::string show_name = "music of happy pigs";
-
     std::condition_variable cv;
     std::mutex cv_m;
 
@@ -277,6 +274,7 @@ int main(int argc, char const *argv[])
     pixels[1] = std::vector<Color>(n_leds_per_universe, ORANGE);
     pixels[2] = std::vector<Color>(n_leds_per_universe, YELLOW);
     pixels[3] = std::vector<Color>(n_leds_per_universe, WHITE);
+    pixels[4] = std::vector<Color>(n_leds_per_universe, GREEN);
 
     for (const auto&[show_name, show] : show_buffer) {
         show->pixels = &pixels;
@@ -348,6 +346,7 @@ int main(int argc, char const *argv[])
     InitWindow(screenWidth, screenHeight, "Art Net viz");
     SetTargetFPS(30);
 
+    std::string show_name = "music of happy pigs";
     while (!WindowShouldClose()){
         draw(show_name, pixels, pixels_mutex);
     }

@@ -24,6 +24,14 @@ std::map<std::string, Show*> read_show_mapping(std::string config) {
     ryml::NodeRef show_mapping = tree["show_mapping"];
     std::map<std::string, Show*> show_buffer;
 
+    std::string bg_show_id = "background_show";
+    std::string show_file;
+    tree["background_show_file"] >> show_file;
+    show_buffer[bg_show_id] = new Show(bg_show_id, (fs::path{show_dir} / show_file).string());
+    show_buffer[bg_show_id]->state.set_background(true);
+    show_buffer[bg_show_id]->state.set_loop(true);
+    show_buffer[bg_show_id]->state.set_ignore_stop(true);
+
     // cache all animations
     for (ryml::NodeRef const& child : show_mapping.children()) {
         
@@ -31,7 +39,6 @@ std::map<std::string, Show*> read_show_mapping(std::string config) {
         ryml::from_chars(child.key(), &show_id);
 
         // std::cout << child.has_child(ryml::to_csubstr("show_file")) << std::endl;
-        std::string show_file;
         child["show_file"] >> show_file;
 
         fs::path show_path{show_dir};
