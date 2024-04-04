@@ -7,7 +7,7 @@ target_link_libraries(light_squares raylib)
 
 
 # configure_file(test.pcapng ${CMAKE_CURRENT_BINARY_DIR}/test.pcapng COPYONLY)
-configure_file(config.yml ${CMAKE_CURRENT_BINARY_DIR}/config.yml COPYONLY)
+# configure_file(config.yml ${CMAKE_CURRENT_BINARY_DIR}/config.yml COPYONLY)
 
 
 add_executable(artnet-from-cache

@@ -13,6 +13,7 @@
 class ShowState {
 public:
     ShowState() :
+        priority("normal"),
         background(false),
         loop(false),
         ignore_stop(false),
@@ -43,14 +44,6 @@ public:
         return force_stopped;
     }
 
-    bool is_playing() const {
-        return show_playing;
-    }
-
-    void set_playing(bool flag) {
-        show_playing = flag;
-    }
-
     bool needs_to_play() const {
         return background || loop;
     }
@@ -58,6 +51,16 @@ public:
     // bool is_playing_in_background() const {
     //     background && is_playing
     // }
+
+    ////
+
+    void set_playing(bool flag) {
+        show_playing = flag;
+    }
+    
+    bool is_playing() const {
+        return show_playing;
+    }
 
     void set_loop(bool flag) {
         loop = flag;
@@ -91,7 +94,16 @@ public:
         return visible;
     }
 
+    void set_priority(const std::string& value) {
+        priority = value;
+    }
+
+    std::string get_priority() const {
+        return priority;
+    }
+
 private:
+    std::string priority;
     bool background;
     bool loop;
     bool ignore_stop;

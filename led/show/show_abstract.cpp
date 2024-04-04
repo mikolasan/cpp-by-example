@@ -20,5 +20,11 @@ void AbstractShow::apply_config(const ryml::NodeRef& config) {
     }
     state.set_ignore_stop(ignore_stop);
 
+    std::string priority = "normal";
+    if (config.has_child(ryml::to_csubstr("priority"))) {
+        config["priority"] >> priority;
+    }
+    state.set_priority(priority);
+
     do_apply_config(config);
 }

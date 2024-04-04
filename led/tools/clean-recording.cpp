@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 #include <list>
+#include <optional>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -127,9 +128,12 @@ void save_range(
     const std::string& input,
     const std::string& output,
     const std::pair<size_t, size_t>& range,
-    const std::string& ogg_filename)
+    const std::optional<std::string>& ogg_filename)
 {
-    auto audio_duration = read_ogg_audio_duration(ogg_filename);
+    auto audio_duration = std::chrono::microseconds(0);
+    if (ogg_filename) {
+        audio_duration = read_ogg_audio_duration(ogg_filename.value());
+    }
 
     size_t packet_id = 0;
     auto [first_show_packet, last_show_packet] = range;
@@ -156,31 +160,39 @@ void save_range(
             }
             if (code == arx::artnet::OpCode::Dmx || code == arx::artnet::OpCode::Sync) {
 
-                if (total_out_duration < audio_duration) {
-                    if (total_out_duration + duration_between_packets > audio_duration) {
-                        // update duration only for the last packet ignoring any packets that we skippd
-                        // the pcap library will handle that during the dump
-                        Duration new_duration_between_packets = audio_duration - total_out_duration;
-                        Duration diff = duration_between_packets - new_duration_between_packets;
-                        // std::cout << "final length " << std::chrono::duration_cast<std::chrono::microseconds>(total_out_duration).count() << std::endl;
-                        // std::cout << "new last frame duration: " << duration_between_packets.count() << std::endl;
-                        stream.setDuration(duration - diff);
-                        duration_between_packets = new_duration_between_packets;
-                    }
+                if (ogg_filename) {
+                    if (total_out_duration < audio_duration) {
+                        if (total_out_duration + duration_between_packets > audio_duration) {
+                            // update duration only for the last packet ignoring any packets that we skippd
+                            // the pcap library will handle that during the dump
+                            Duration new_duration_between_packets = audio_duration - total_out_duration;
+                            Duration diff = duration_between_packets - new_duration_between_packets;
+                            // std::cout << "final length " << std::chrono::duration_cast<std::chrono::microseconds>(total_out_duration).count() << std::endl;
+                            // std::cout << "new last frame duration: " << duration_between_packets.count() << std::endl;
+                            stream.setDuration(duration - diff);
+                            duration_between_packets = new_duration_between_packets;
+                        }
 
+                        total_out_duration += duration_between_packets;
+                        // std::cout << out_packet_id << " "
+                        //     << duration_between_packets.count() << " "
+                        //     << total_out_duration.count() << std::endl;
+                    
+                        stream.dumpPacket();
+                        
+                        ++out_packet_id;
+                        duration_between_packets = std::chrono::nanoseconds(0);
+                    } else {
+                        // std::cout << "{{beyond audio}} "
+                        //     << duration.count() << " "
+                        //     << total_show_duration.count() << std::endl;
+                    }
+                } else {
                     total_out_duration += duration_between_packets;
-                    // std::cout << out_packet_id << " "
-                    //     << duration_between_packets.count() << " "
-                    //     << total_out_duration.count() << std::endl;
-                
                     stream.dumpPacket();
                     
                     ++out_packet_id;
                     duration_between_packets = std::chrono::nanoseconds(0);
-                } else {
-                    // std::cout << "{{beyond audio}} "
-                    //     << duration.count() << " "
-                    //     << total_show_duration.count() << std::endl;
                 }
             } else {
                 // std::cout << "<<skip packet>> "
@@ -244,8 +256,15 @@ int main(int argc, char const *argv[])
 
         std::string input((input_dir / show_file).string());
         std::string output((output_dir / show_file).string());
-        std::string ogg_filename((sounds_dir / sound_name).string());
-        
+        std::optional<std::string> ogg_filename((sounds_dir / sound_name).string());
+        bool perfect_with_sound = true;
+        if (child.has_child(ryml::to_csubstr("perfect_with_sound"))) {
+            child["perfect_with_sound"] >> perfect_with_sound;
+            if (!perfect_with_sound) {
+                ogg_filename.reset();
+            }
+        }
+
         std::cout << std::endl;
         std::cout << "Processing '" << input << "'..." << std::endl;
         std::cout << std::endl;

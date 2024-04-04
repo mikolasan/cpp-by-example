@@ -63,10 +63,10 @@ ParsedMessage receive_and_parse(zmq::socket_t& socket)
     std::ssub_match sound_name_sub_match = match[3];
     std::string sound_name = sound_name_sub_match.str();
 
-    // std::cout << "Parsed [action: " << action
-    //     << " | game: " << game_name
-    //     << " | sound: " << sound_name 
-    //     << "]" << std::endl;
+    std::cout << "Parsed [action: " << action
+        << " | game: " << game_name
+        << " | sound: " << sound_name 
+        << "]" << std::endl;
 
     std::string show_name = game_name + "|" + sound_name;
     return {action, show_name};
@@ -121,6 +121,12 @@ void process_command(
 
         }
         
+        // current show cannot overwrite
+        if (show->state.get_priority() == "high") {
+            std::cout << ".. show with high priority is still playing\n";
+            return;
+        }
+
         // stop or hide current
         if (show->state.get_background_flag()) {
             std::cout << "HIDE background show " 
