@@ -155,6 +155,7 @@ void process_command(
         // show->state.set_playing(true);
         if (show->state.get_background_flag()) {
             std::cout << "PUSH background show " << show->get_codename() << std::endl;
+            show->state.set_visible(true);
             background_shows.push_front(show);
         }
         
@@ -234,7 +235,13 @@ void on_show_ended(
 
 int main(int argc, char const *argv[])
 {
-    std::string contents = get_file_contents("config.yml");
+    std::string config_filename = "config.yml";
+    if (argc == 2) {
+        std::cout << "Use provided config " << argv[1] << std::endl;
+        config_filename = std::string(argv[1]);
+    }
+
+    std::string contents = get_file_contents(config_filename.c_str());
     std::map<std::string, Show*> show_buffer = read_show_mapping<Show>(contents);
 
     ryml::Tree tree = ryml::parse_in_arena(ryml::to_csubstr(contents));

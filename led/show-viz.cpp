@@ -189,6 +189,7 @@ void process_command(
         // show->state.set_playing(true);
         if (show->state.get_background_flag()) {
             std::cout << "PUSH background show " << show->get_codename() << std::endl;
+            show->state.set_visible(true);
             background_shows.push_front(show);
         }
         
