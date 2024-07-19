@@ -14,3 +14,6 @@ target_link_libraries(sha256_test ${OPENSSL_LIBRARIES})
 
 add_executable(rsa2048 rsa2048.cpp)
 target_link_libraries(rsa2048 ${OPENSSL_LIBRARIES})
+
+add_executable(randomness_test randomness-test.c)
+configure_file(decoded-20240131051421.bin ${CMAKE_CURRENT_BINARY_DIR}/decoded-20240131051421.bin COPYONLY)
