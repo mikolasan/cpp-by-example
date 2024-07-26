@@ -82,7 +82,12 @@
         "format": "cpp",
         "span": "cpp",
         "stdfloat": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "hash_set": "cpp",
+        "shared_mutex": "cpp",
+        "ranges": "cpp",
+        "filesystem": "cpp",
+        "text_encoding": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
