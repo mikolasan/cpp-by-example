@@ -51,7 +51,3 @@ target_link_libraries(code-to-assembly
   )
 
 # Version.lib - https://learn.microsoft.com/en-us/windows/win32/api/winver/nf-winver-getfileversioninfosizew
-
-
-add_executable(bfd-example bfd-example.cpp)
-target_link_libraries(bfd-example bfd)

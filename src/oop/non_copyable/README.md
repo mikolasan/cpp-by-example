@@ -3,5 +3,5 @@
 ## Non Copyable Macro
 
 ```cpp
-{{#include ../../../_oop/non_copyable/non-copyable.cpp}}
+{{#include ../../../oop/non_copyable/non-copyable.cpp}}
 ```

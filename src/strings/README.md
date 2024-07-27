@@ -1,4 +1,4 @@
-# Read text file
+# Strings
 
 ## Strip whitespaces from the right
 

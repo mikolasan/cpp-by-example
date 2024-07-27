@@ -5,12 +5,12 @@ What bad can happen if one doesn't define a destructor in the base class as `vir
 ## Just virtual destructor
 
 ```cpp
-{{#include ../../../_oop/destructor/virtual-destructor.cpp}}
+{{#include ../../../oop/destructor/virtual-destructor.cpp}}
 ```
 
 ## Virtual and Protected destructor
 
 ```cpp
-{{#include ../../../_oop/destructor/protected-destructor.cpp}}
+{{#include ../../../oop/destructor/protected-destructor.cpp}}
 ```
 

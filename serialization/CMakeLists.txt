@@ -1,6 +1,5 @@
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-add_executable(tony_rand lrand.c)
 add_executable(save_number save-number.cpp)
 add_executable(write_number write-number.cpp)
 
