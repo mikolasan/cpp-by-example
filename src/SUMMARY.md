@@ -1,7 +1,7 @@
 # Summary
 
-- [Introduction]()
-- [Table of Contents]()
+- [Introduction](./README.md)
+- [Table of Contents](./toc.md)
 
 # Basics
 
@@ -43,7 +43,7 @@
   - [OpenCV]()
 - [LLVM]()
 - [Lua]()
-- [Cryptography]()
+- [Cryptography](./crypto/README.md)
   - [SHA256](./crypto/sha.md)
   - [RSA](./crypto/rsa_encrypt_decrypt.md)
 - [Audio]()

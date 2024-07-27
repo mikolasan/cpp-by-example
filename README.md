@@ -1,6 +1,6 @@
-# C++ training snippets
+# C++ by example
 
-Develop, train and test your skills in C++ language with *cpp-skill*
+Develop, train and test your skills in C++ language
 
 ## Dependencies
 
