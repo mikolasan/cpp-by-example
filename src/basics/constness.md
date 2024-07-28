@@ -2,11 +2,15 @@
 
 ## Arrays and pointers
 
+### Intact values
+
 Values of the array cannot be changed. But array itself can be assigned
 
 ```cpp
 {{#include ../../basics/constness/const-1.cpp}}
 ```
+
+### Intact pointer
 
 This preserves the pointer but not the values
 
@@ -14,11 +18,15 @@ This preserves the pointer but not the values
 {{#include ../../basics/constness/const-2.cpp}}
 ```
 
+### Initialize only once
+
 It must be assigned only once
 
 ```cpp
 {{#include ../../basics/constness/const-3.cpp}}
 ```
+
+### Read-only
 
 Here's the absolute read-only version
 
@@ -27,7 +35,7 @@ Here's the absolute read-only version
 ```
 
 
-## When function call changes the pointer
+## When function changes the pointer
 
 Wrong
 
