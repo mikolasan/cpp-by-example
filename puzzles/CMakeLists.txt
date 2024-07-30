@@ -1,0 +1,2 @@
+add_subdirectory(crosswords)
+add_subdirectory(jewel_game)

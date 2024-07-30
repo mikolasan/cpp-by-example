@@ -1,5 +1,8 @@
 set(CMAKE_CXX_STANDARD 20)
 
+set(OpenGL_GL_PREFERENCE GLVND)
+add_subdirectory(thirdparty/raylib-git)
+
 add_executable(light_squares light-squares.cpp)
 # target_include_directories(light_squares PRIVATE thirdparty/include)
 # target_link_directories(light_squares PRIVATE thirdparty/lib)
