@@ -1,6 +1,6 @@
 # Arch: pacman -S opencv vtk
 
-# list(APPEND CMAKE_PREFIX_PATH /usr/lib/cmake/opencv4)
+list(APPEND CMAKE_PREFIX_PATH /usr/lib/cmake/opencv4)
 
 find_package(OpenCV REQUIRED)
 
