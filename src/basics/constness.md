@@ -4,7 +4,7 @@
 
 ### Intact values
 
-Values of the array cannot be changed. But array itself can be assigned
+Values of the array cannot be changed. But array itself can be reassigned
 
 ```cpp
 {{#include ../../basics/constness/const-1.cpp}}
@@ -18,9 +18,7 @@ This preserves the pointer but not the values
 {{#include ../../basics/constness/const-2.cpp}}
 ```
 
-### Initialize only once
-
-It must be assigned only once
+So it must be initialized (assigned) only once. You cannot change size of the array, but content can be modified.
 
 ```cpp
 {{#include ../../basics/constness/const-3.cpp}}
@@ -37,17 +35,25 @@ Here's the absolute read-only version
 
 ## When function changes the pointer
 
-Wrong
+How to make sure that a pointer you have is not going to change? For example, if the function reads elements from an array and will update the pointer to the position where it finished reading.
 
 ```cpp
 unsigned char* key = NULL;
 size_t size = key_size;
+OSSL_DECODER_from_data(dctx, key, &size);
+// int OSSL_DECODER_from_data(OSSL_DECODER_CTX *ctx, const unsigned char **pdata, size_t *pdata_len);
+
+```
+
+**Wrong**
+
+```cpp
 const unsigned char **data = const_cast<const unsigned char**>(&key); // data pointer will be changed
 OSSL_DECODER_from_data(dctx, data, &size);
 
 ```
 
-Correct
+**Correct**
 
 ```cpp
 const unsigned char *data = const_cast<const unsigned char*>(key);

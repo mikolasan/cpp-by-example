@@ -1,5 +1,7 @@
 # Fork
 
+I believe [this bog post](https://percona.community/blog/2021/01/04/fork-exec-wait-and-exit/) explains in detail about `fork` and `wait`, but I just want my small example here.
+
 <div class="warning">
 Linux only
 </div>
