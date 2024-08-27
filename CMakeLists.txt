@@ -11,16 +11,23 @@ add_subdirectory(audio)
 add_subdirectory(basics)
 add_subdirectory(cli)
 add_subdirectory(combinatorics)
-add_subdirectory(cryptography)
+# OpenSSL required
+# add_subdirectory(cryptography)
 add_subdirectory(experimental)
-add_subdirectory(fsm)
-add_subdirectory(gpu)
+# OpenCV required
+# add_subdirectory(gpu)
+
 # add_subdirectory(led)
+
+# LLVM required
 # add_subdirectory(llvm)
-add_subdirectory(lua)
+
+# Lua required
+# add_subdirectory(lua)
 add_subdirectory(net)
 add_subdirectory(oop)
 add_subdirectory(optimization)
+add_subdirectory(patterns)
 add_subdirectory(puzzles)
 add_subdirectory(rand)
 add_subdirectory(serialization)

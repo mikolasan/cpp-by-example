@@ -30,6 +30,9 @@
 
 # Cookbook
 
+- [Patterns](./patterns/README.md)
+  - [State Machine](./patterns/fsm.md)
+  - [Factory](./patterns/factory.md)
 - [Network](./net/README.md)
 - [Time](./time/README.md)
 - [Random](./random/README.md)
@@ -54,7 +57,6 @@
 # Projects
 
 - [LED]()
-- [FSM]()
 
 # Puzzles
 
