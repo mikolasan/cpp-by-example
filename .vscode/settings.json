@@ -109,7 +109,13 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "__nullptr": "cpp"
+        "__nullptr": "cpp",
+        "barrier": "cpp",
+        "csetjmp": "cpp",
+        "cuchar": "cpp",
+        "execution": "cpp",
+        "latch": "cpp",
+        "scoped_allocator": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }

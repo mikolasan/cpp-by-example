@@ -4,8 +4,8 @@
 
 int main(int argc, char const *argv[])
 {
-    // std::string message = "play|cauldrons_of_fortune|Sound.ogg";
-    std::string message = "play|cauldrons_of_fortune|";
+    // std::string message = "play|game|Sound.ogg";
+    std::string message = "play|game|";
     std::cout << "Message: " << message << std::endl;
 
     // (select|play|stop):(game_name):(sound_name)

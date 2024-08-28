@@ -210,8 +210,6 @@ void on_show_ended(
         }
 
         return;
-    // } else if (show_name == "cauldrons_of_fortune|Wild.ogg") {
-    //     return;
     }
 
     while (background_shows.size() > 1) {
