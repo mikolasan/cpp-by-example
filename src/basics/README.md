@@ -7,7 +7,7 @@ Like really global global variable that is defined in one compilation unit but c
 **somewhere.h**
 
 ```cpp
-static int global_variable;
+extern int global_variable;
 ```
 
 **somewhere.cpp**
@@ -24,3 +24,5 @@ void foo()
     global_variable = 2;
 }
 ```
+
+## Heap VS stack

@@ -1,6 +1,6 @@
 
 namespace ggg {
-static int global_variable = 1;
+extern int global_variable;
 }
 
 class mmm {

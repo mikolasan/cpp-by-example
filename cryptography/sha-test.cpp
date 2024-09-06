@@ -74,25 +74,25 @@ digest_array sha256(const std::vector<char>& input)
 // }
 
 // deprecated version
-// std::string_view sha256(const std::list<std::string_view>& input)
-// {
-//     SHA256_CTX context;
-//     if (SHA256_Init(&context) == 0) {
-//         std::cerr << "sha256 context init failed" << std::endl;
-//     }
+std::string_view sha256_deprecated(const std::list<std::string_view>& input)
+{
+    SHA256_CTX context;
+    if (SHA256_Init(&context) == 0) {
+        std::cerr << "sha256 context init failed" << std::endl;
+    }
     
-//     for (const auto& i : input) {
-//         if (SHA256_Update(&context, i.data(), i.size()) == 0) {
-//             std::cerr << "sha256 update failed" << std::endl;
-//         }
-//     }
+    for (const auto& i : input) {
+        if (SHA256_Update(&context, i.data(), i.size()) == 0) {
+            std::cerr << "sha256 update failed" << std::endl;
+        }
+    }
     
-//     std::array<unsigned char, SHA256_DIGEST_LENGTH> digest;
-//     if (SHA256_Final(digest.data(), &context) == 0) {
-//         std::cerr << "sha256 final failed" << std::endl;
-//     }
-//     return std::string_view(digest.begin(), digest.end());
-// }
+    std::array<unsigned char, SHA256_DIGEST_LENGTH> digest;
+    if (SHA256_Final(digest.data(), &context) == 0) {
+        std::cerr << "sha256 final failed" << std::endl;
+    }
+    return std::string_view(digest.begin(), digest.end());
+}
 
 int main(int argc, char const *argv[])
 {
