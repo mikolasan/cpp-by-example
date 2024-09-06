@@ -7,6 +7,6 @@ int main(int argc, char const *argv[])
     const_variable[3] = 'l';
     const_variable[4] = 'o';
     delete const_variable;
-    const_variable = nullptr; // error: expression must be a modifiable lvalue
+    // cons[]t_variable = nullptr; // error: expression must be a modifiable lvalue
     return 0;
 }

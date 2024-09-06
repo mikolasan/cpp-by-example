@@ -23,12 +23,11 @@ void cool_function(Hint hint, Ts... args) {
     }
     case Hint::COOL_THREE:
     {
-        if constexpr ()
-        auto print_cool_three = [](const char* string, size_t size) {
-            std::cout << string;
-        };
         std::cout << "COOL THREE: ";
-        print_cool_three(args...);
+        // auto print_cool_three = [](const char* string, size_t size) {
+        //     std::cout << string;
+        // };
+        // print_cool_three(args...);
         std::cout << std::endl;
         break;
     }

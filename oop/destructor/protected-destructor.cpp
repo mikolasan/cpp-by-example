@@ -13,8 +13,8 @@ protected:
 
 int main(int argc, char const *argv[])
 {
-    ProtectedDestructor* obj = new ProtectedDestructor();
+    const ProtectedDestructor* obj = new ProtectedDestructor();
     // delete dynamic_cast<PleaseLetMeDelete*>(obj);
-    delete obj;
+    // delete obj; // error: destructor is inaccessible
     return 0;
 }

@@ -22,3 +22,11 @@ Add to user environment variables
 ```
 Lua51_ROOT = "C:\<path_to_cpp-skill>\windows\lua"
 ```
+
+
+## Build
+
+```
+cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
+cmake --build build --target all
+```

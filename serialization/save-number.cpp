@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdint.h>
 
 #define MIN(a, b) ((a < b) ? a : b)
 

@@ -3,7 +3,8 @@
 #include <limits>
 #include <string>
 
-static char mem[100] 
+static char mem[100];
+
 template<typename T>
 void write_number(T v, uint8_t* b, size_t type_size)
 {
@@ -19,7 +20,6 @@ void save_pulse_value_into_nvram(const std::string &file_name_prefix, int id, T 
     size_t size = sizeof(T) + 1;
     uint8_t *data = static_cast<uint8_t*>(std::calloc(size, sizeof(uint8_t)));
     write_number<T>(value, data, size);
-    write_file_async(file_name, size, (unsigned char *)data, true);
     free(data);
 }
 

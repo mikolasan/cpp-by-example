@@ -1,2 +1,5 @@
 add_executable(const-1 const-1.cpp)
 add_executable(const-2 const-2.cpp)
+add_executable(const-3 const-3.cpp)
+add_executable(const-4 const-4.cpp)
+add_executable(const-5 const-5.cpp)

@@ -144,12 +144,14 @@ int main(int argc, char const *argv[])
   fseek(f, 0, SEEK_END);
   int size = ftell(f);
   printf("found %d bytes in binary file\n", size);
-  if (size <= 0)
+  if (size <= 0) {
+    fclose(f);
     return -1;
+  }
   
   fseek(f, 0, SEEK_SET);
 
-  int8_t *values = malloc(size);
+  int8_t* values = (int8_t*)malloc(size);
   fread(values, sizeof(int8_t), size, f);
   fclose(f);
 
