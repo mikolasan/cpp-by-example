@@ -1,1 +1,7 @@
 # Serialization
+
+## JSON
+
+## YAML
+
+## Binary
