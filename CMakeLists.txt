@@ -13,7 +13,8 @@ add_subdirectory(cli)
 add_subdirectory(combinatorics)
 # OpenSSL required
 # add_subdirectory(cryptography)
-add_subdirectory(experimental)
+
+# add_subdirectory(experimental)
 # OpenCV required
 # add_subdirectory(gpu)
 
