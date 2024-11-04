@@ -17,7 +17,7 @@ add_subdirectory(combinatorics)
 # add_subdirectory(experimental)
 # OpenCV required
 # add_subdirectory(gpu)
-
+add_subdirectory(graphics)
 # add_subdirectory(led)
 
 # LLVM required
