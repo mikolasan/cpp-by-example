@@ -9,4 +9,4 @@
 
 ## UI for terminal (TUI)
 
-[Someting better](https://github.com/ArthurSonzogni/FTXUI) than **dialog** because it supports mouse better - 
+[Someting better](https://github.com/ArthurSonzogni/FTXUI) than **dialog** because it supports mouse better

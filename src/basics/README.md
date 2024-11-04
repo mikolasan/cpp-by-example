@@ -2,7 +2,7 @@
 
 ## Global variable
 
-Like really global global variable that is defined in one compilation unit but can be changes in another place. It's one of those cases when "I know what I'm doing"
+Like really global global variable that is defined in one compilation unit but can be changed in another place. It's one of those cases when "I know what I'm doing"
 
 **somewhere.h**
 
@@ -26,3 +26,5 @@ void foo()
 ```
 
 ## Heap VS stack
+
+TODO

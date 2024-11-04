@@ -1,35 +1,14 @@
-#include "easywsclient.hpp"
-#include <iostream>
-#include <string>
-#include <memory>
-#include <mutex>
-#include <deque>
-#include <thread>
-#include <chrono>
 #include <atomic>
+#include <chrono>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <thread>
 
-// a simple, thread-safe queue with (mostly) non-blocking reads and writes
-namespace non_blocking {
-template <class T>
-class Queue {
-    mutable std::mutex m;
-    std::deque<T> data;
-public:
-    void push(T const &input) { 
-        std::lock_guard<std::mutex> L(m);
-        data.push_back(input);
-    }
+#include "easywsclient.hpp"
+#include "json.hpp"
+#include "queue.hpp"
 
-    bool pop(T &output) {
-        std::lock_guard<std::mutex> L(m);
-        if (data.empty())
-            return false;
-        output = data.front();
-        data.pop_front();
-        return true;
-    }
-};
-}
 
 // eastwsclient isn't thread safe, so this is a really simple
 // thread-safe wrapper for it.

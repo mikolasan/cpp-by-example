@@ -1,3 +1,7 @@
+add_subdirectory(json)
+add_subdirectory(yaml)
+
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 add_executable(save_number save-number.cpp)
