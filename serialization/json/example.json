@@ -1,0 +1,8 @@
+{
+    "command": "register",
+    "register": {
+        "game_name": "game_name",
+        "game_version": "game_version",
+        "token": "token"
+    }
+}
