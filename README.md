@@ -1,10 +1,13 @@
 # C++ by example
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/73450bc7-9e25-4544-a0e8-79a2dbed6054/deploy-status)](https://app.netlify.com/sites/cpp-by-example/deploys)
+![Static Badge](https://img.shields.io/badge/cpp-11-6BBAEC)
+![Static Badge](https://img.shields.io/badge/cpp-17-6987C9)
+![Static Badge](https://img.shields.io/badge/cpp-20-B388EB)
 
-Develop, train and test your skills in C++ language
 
-## Dependencies
+A collection of code snippets in C++ language
+
+## Optional dependencies
 
 ### LLVM
 
