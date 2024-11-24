@@ -69,3 +69,4 @@
 # Experimental
 
 - [BFD]()
+- [5 things to not bother in C++](./advanced/useless.md)
