@@ -1,10 +1,16 @@
-
-find_package(SDL2 CONFIG REQUIRED)
-
 if (SDL2_FOUND)
     include_directories(${SDL2_INCLUDE_DIRS})
     message(STATUS "Using SDL2 ${SDL2_VERSION}")
 endif(SDL2_FOUND)
+
+find_package(OpenGL REQUIRED)
+if(OpenGL_FOUND)
+    message(STATUS "OpenGL found!")
+    message(STATUS "OpenGL include directories: ${OPENGL_INCLUDE_DIR}")
+    message(STATUS "OpenGL libraries: ${OPENGL_gl_LIBRARY}")
+else()
+    message(FATAL_ERROR "OpenGL not found!")
+endif()
 
 add_executable(nodes_example
     imgui/imgui.cpp
@@ -21,4 +27,4 @@ add_executable(nodes_example
 target_include_directories(nodes_example 
     PRIVATE imgui imgui/backends imnodes
 )
-target_link_libraries(nodes_example GL ${SDL2_LIBRARIES})
+target_link_libraries(nodes_example OpenGL::GL ${SDL2_LIBRARIES})

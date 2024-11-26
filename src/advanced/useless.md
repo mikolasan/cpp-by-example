@@ -11,7 +11,7 @@ int main() {
 }
 ```
 
-  [Built-in member access operators(https://en.cppreference.com/w/cpp/language/operator_member_access#Built-in_member_access_operators)
+[Built-in member access operators](https://en.cppreference.com/w/cpp/language/operator_member_access#Built-in_member_access_operators)
 
 ## ODR use
 

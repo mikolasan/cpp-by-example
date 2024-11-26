@@ -11,6 +11,18 @@
 #include <cmath>
 #include <vector>
 
+/*
+
+http://multiversesocial.com/web4.html
+
+ssd data -> device_memory_channel ->
+        -> data, controls vlc_channel -> audio, video, subtitles
+        -> audio_channel- > speakers
+        -> video_channel ->
+        -> gpu_channel ->
+        -> screen_channel -> monitor
+*/
+
 namespace example
 {
 namespace
@@ -22,6 +34,15 @@ enum class NodeType
     output,
     sine,
     time,
+    device_memory_channel,
+    vlc_channel,
+    audio_channel,
+    video_channel,
+    gpu_channel,
+    screen_channel,
+    monitor,
+    speakers,
+    ssd,
     value
 };
 
@@ -235,6 +256,22 @@ public:
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
                 }
 
+                if (ImGui::MenuItem("device memory channel"))
+                {
+                    const Node value(NodeType::value, 0.f);
+                    const Node op(NodeType::device_memory_channel);
+
+                    UiNode ui_node;
+                    ui_node.type = UiNodeType::device_memory_channel;
+                    // ui_node.ui.add.lhs = graph_.insert_node(value);
+                    ui_node.id = graph_.insert_node(op);
+
+                    // graph_.insert_edge(ui_node.id, ui_node.ui.add.lhs);
+                    
+                    nodes_.push_back(ui_node);
+                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
+                }
+
                 if (ImGui::MenuItem("multiply"))
                 {
                     const Node value(NodeType::value, 0.f);
@@ -254,6 +291,48 @@ public:
                 }
 
                 if (ImGui::MenuItem("output") && root_node_id_ == -1)
+                {
+                    const Node value(NodeType::value, 0.f);
+                    const Node out(NodeType::output);
+
+                    UiNode ui_node;
+                    ui_node.type = UiNodeType::output;
+                    ui_node.ui.output.r = graph_.insert_node(value);
+                    ui_node.ui.output.g = graph_.insert_node(value);
+                    ui_node.ui.output.b = graph_.insert_node(value);
+                    ui_node.id = graph_.insert_node(out);
+
+                    graph_.insert_edge(ui_node.id, ui_node.ui.output.r);
+                    graph_.insert_edge(ui_node.id, ui_node.ui.output.g);
+                    graph_.insert_edge(ui_node.id, ui_node.ui.output.b);
+
+                    nodes_.push_back(ui_node);
+                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
+                    root_node_id_ = ui_node.id;
+                }
+
+                if (ImGui::MenuItem("speakers") && root_node_id_ == -1)
+                {
+                    const Node value(NodeType::value, 0.f);
+                    const Node out(NodeType::output);
+
+                    UiNode ui_node;
+                    ui_node.type = UiNodeType::output;
+                    ui_node.ui.output.r = graph_.insert_node(value);
+                    ui_node.ui.output.g = graph_.insert_node(value);
+                    ui_node.ui.output.b = graph_.insert_node(value);
+                    ui_node.id = graph_.insert_node(out);
+
+                    graph_.insert_edge(ui_node.id, ui_node.ui.output.r);
+                    graph_.insert_edge(ui_node.id, ui_node.ui.output.g);
+                    graph_.insert_edge(ui_node.id, ui_node.ui.output.b);
+
+                    nodes_.push_back(ui_node);
+                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
+                    root_node_id_ = ui_node.id;
+                }
+
+                if (ImGui::MenuItem("monitor") && root_node_id_ == -1)
                 {
                     const Node value(NodeType::value, 0.f);
                     const Node out(NodeType::output);
@@ -295,6 +374,16 @@ public:
                     UiNode ui_node;
                     ui_node.type = UiNodeType::time;
                     ui_node.id = graph_.insert_node(Node(NodeType::time));
+
+                    nodes_.push_back(ui_node);
+                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
+                }
+
+                if (ImGui::MenuItem("SSD"))
+                {
+                    UiNode ui_node;
+                    ui_node.type = UiNodeType::ssd;
+                    ui_node.id = graph_.insert_node(Node(NodeType::ssd));
 
                     nodes_.push_back(ui_node);
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
@@ -533,6 +622,239 @@ public:
                 ImNodes::EndNode();
             }
             break;
+            case UiNodeType::ssd:
+            {
+                ImNodes::BeginNode(node.id);
+
+                ImNodes::BeginNodeTitleBar();
+                ImGui::TextUnformatted("SSD");
+                ImNodes::EndNodeTitleBar();
+
+                ImNodes::BeginOutputAttribute(node.id);
+                ImGui::Text("data");
+                ImNodes::EndOutputAttribute();
+
+                ImNodes::EndNode();
+            }
+            break;
+            case UiNodeType::monitor:
+            {
+                // ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(11, 109, 191, 255));
+                // ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(45, 126, 194, 255));
+                // ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(81, 148, 204, 255));
+                ImNodes::BeginNode(node.id);
+
+                ImNodes::BeginNodeTitleBar();
+                ImGui::TextUnformatted("monitor");
+                ImNodes::EndNodeTitleBar();
+
+                ImNodes::BeginInputAttribute(node.ui.output.r);
+                ImGui::Text("screen");
+                ImNodes::EndInputAttribute();
+
+                ImNodes::EndNode();
+                // ImNodes::PopColorStyle();
+                // ImNodes::PopColorStyle();
+                // ImNodes::PopColorStyle();
+            }
+            break;
+            case UiNodeType::speakers:
+            {
+                ImNodes::BeginNode(node.id);
+
+                ImNodes::BeginNodeTitleBar();
+                ImGui::TextUnformatted("speakers");
+                ImNodes::EndNodeTitleBar();
+
+                ImNodes::BeginInputAttribute(node.ui.output.r);
+                ImGui::Text("sound");
+                ImNodes::EndInputAttribute();
+
+                ImNodes::EndNode();
+            }
+            break;
+            case UiNodeType::device_memory_channel:
+            {
+                const float node_width = 100.f;
+                ImNodes::BeginNode(node.id);
+
+                ImNodes::BeginNodeTitleBar();
+                ImGui::TextUnformatted("device memory channel");
+                ImNodes::EndNodeTitleBar();
+                {
+                    ImNodes::BeginInputAttribute(node.ui.add.lhs);
+                    ImGui::TextUnformatted("data");
+                    ImNodes::EndInputAttribute();
+                }
+
+                ImGui::Spacing();
+
+                {
+                    ImNodes::BeginOutputAttribute(node.id);
+                    const float label_width = ImGui::CalcTextSize("buffer").x;
+                    ImGui::Indent(node_width - label_width);
+                    ImGui::TextUnformatted("buffer");
+                    ImNodes::EndOutputAttribute();
+                }
+
+                ImNodes::EndNode();
+            }
+            break;
+            case UiNodeType::vlc_channel:
+            {
+                const float node_width = 100.f;
+                ImNodes::BeginNode(node.id);
+
+                ImNodes::BeginNodeTitleBar();
+                ImGui::TextUnformatted("VLC channel");
+                ImNodes::EndNodeTitleBar();
+                {
+                    ImNodes::BeginInputAttribute(node.ui.add.lhs);
+                    ImGui::TextUnformatted("buffer");
+                    ImNodes::EndInputAttribute();
+                }
+
+                ImGui::Spacing();
+
+                {
+                    ImNodes::BeginOutputAttribute(node.id);
+                    const float label_width = ImGui::CalcTextSize("audio buffer").x;
+                    ImGui::Indent(node_width - label_width);
+                    ImGui::TextUnformatted("audio buffer");
+                    ImNodes::EndOutputAttribute();
+                }
+
+                ImGui::Spacing();
+
+                {
+                    ImNodes::BeginOutputAttribute(node.id);
+                    const float label_width = ImGui::CalcTextSize("video buffer").x;
+                    ImGui::Indent(node_width - label_width);
+                    ImGui::TextUnformatted("video buffer");
+                    ImNodes::EndOutputAttribute();
+                }
+
+                ImGui::Spacing();
+
+                {
+                    ImNodes::BeginOutputAttribute(node.id);
+                    const float label_width = ImGui::CalcTextSize("subtitles buffer").x;
+                    ImGui::Indent(node_width - label_width);
+                    ImGui::TextUnformatted("subtitles buffer");
+                    ImNodes::EndOutputAttribute();
+                }
+
+                ImNodes::EndNode();
+            }
+            break;
+            case UiNodeType::audio_channel:
+            {
+                const float node_width = 100.f;
+                ImNodes::BeginNode(node.id);
+
+                ImNodes::BeginNodeTitleBar();
+                ImGui::TextUnformatted("audio channel");
+                ImNodes::EndNodeTitleBar();
+                {
+                    ImNodes::BeginInputAttribute(node.ui.add.lhs);
+                    ImGui::TextUnformatted("audio buffer");
+                    ImNodes::EndInputAttribute();
+                }
+
+                ImGui::Spacing();
+
+                {
+                    ImNodes::BeginOutputAttribute(node.id);
+                    const float label_width = ImGui::CalcTextSize("sound").x;
+                    ImGui::Indent(node_width - label_width);
+                    ImGui::TextUnformatted("sound");
+                    ImNodes::EndOutputAttribute();
+                }
+
+                ImNodes::EndNode();
+            }
+            break;
+            case UiNodeType::video_channel:
+            {
+                const float node_width = 100.f;
+                ImNodes::BeginNode(node.id);
+
+                ImNodes::BeginNodeTitleBar();
+                ImGui::TextUnformatted("video channel");
+                ImNodes::EndNodeTitleBar();
+                {
+                    ImNodes::BeginInputAttribute(node.ui.add.lhs);
+                    ImGui::TextUnformatted("video buffer");
+                    ImNodes::EndInputAttribute();
+                }
+
+                ImGui::Spacing();
+
+                {
+                    ImNodes::BeginOutputAttribute(node.id);
+                    const float label_width = ImGui::CalcTextSize("buffer").x;
+                    ImGui::Indent(node_width - label_width);
+                    ImGui::TextUnformatted("buffer");
+                    ImNodes::EndOutputAttribute();
+                }
+
+                ImNodes::EndNode();
+            }
+            break;
+            case UiNodeType::gpu_channel:
+            {
+                const float node_width = 100.f;
+                ImNodes::BeginNode(node.id);
+
+                ImNodes::BeginNodeTitleBar();
+                ImGui::TextUnformatted("GPU channel");
+                ImNodes::EndNodeTitleBar();
+                {
+                    ImNodes::BeginInputAttribute(node.ui.add.lhs);
+                    ImGui::TextUnformatted("buffer");
+                    ImNodes::EndInputAttribute();
+                }
+
+                ImGui::Spacing();
+
+                {
+                    ImNodes::BeginOutputAttribute(node.id);
+                    const float label_width = ImGui::CalcTextSize("framebuffer").x;
+                    ImGui::Indent(node_width - label_width);
+                    ImGui::TextUnformatted("framebuffer");
+                    ImNodes::EndOutputAttribute();
+                }
+
+                ImNodes::EndNode();
+            }
+            break;
+            case UiNodeType::screen_channel:
+            {
+                const float node_width = 100.f;
+                ImNodes::BeginNode(node.id);
+
+                ImNodes::BeginNodeTitleBar();
+                ImGui::TextUnformatted("GPU channel");
+                ImNodes::EndNodeTitleBar();
+                {
+                    ImNodes::BeginInputAttribute(node.ui.add.lhs);
+                    ImGui::TextUnformatted("framebuffer");
+                    ImNodes::EndInputAttribute();
+                }
+
+                ImGui::Spacing();
+
+                {
+                    ImNodes::BeginOutputAttribute(node.id);
+                    const float label_width = ImGui::CalcTextSize("monitor").x;
+                    ImGui::Indent(node_width - label_width);
+                    ImGui::TextUnformatted("monitor");
+                    ImNodes::EndOutputAttribute();
+                }
+
+                ImNodes::EndNode();
+            }
+            break;
             }
         }
 
@@ -660,6 +982,15 @@ private:
         output,
         sine,
         time,
+        device_memory_channel,
+        vlc_channel,
+        audio_channel,
+        video_channel,
+        gpu_channel,
+        screen_channel,
+        monitor,
+        speakers,
+        ssd,
     };
 
     struct UiNode
