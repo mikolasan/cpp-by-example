@@ -157,7 +157,7 @@ public:
         auto flags = ImGuiWindowFlags_MenuBar;
 
         // The node editor window
-        ImGui::Begin("color node editor", NULL, flags);
+        ImGui::Begin("channels node editor", NULL, flags);
 
         if (ImGui::BeginMenuBar())
         {
@@ -238,19 +238,19 @@ public:
             {
                 const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
 
-                if (ImGui::MenuItem("add"))
+                if (ImGui::MenuItem("VLC channel"))
                 {
                     const Node value(NodeType::value, 0.f);
-                    const Node op(NodeType::add);
+                    const Node op(NodeType::vlc_channel);
 
                     UiNode ui_node;
-                    ui_node.type = UiNodeType::add;
-                    ui_node.ui.add.lhs = graph_.insert_node(value);
-                    ui_node.ui.add.rhs = graph_.insert_node(value);
+                    ui_node.type = UiNodeType::vlc_channel;
+                    ui_node.ui.vlc_channel.buffer = graph_.insert_node(value);
+                    ui_node.ui.vlc_channel.controls = graph_.insert_node(value);
                     ui_node.id = graph_.insert_node(op);
 
-                    graph_.insert_edge(ui_node.id, ui_node.ui.add.lhs);
-                    graph_.insert_edge(ui_node.id, ui_node.ui.add.rhs);
+                    graph_.insert_edge(ui_node.id, ui_node.ui.vlc_channel.buffer);
+                    graph_.insert_edge(ui_node.id, ui_node.ui.vlc_channel.controls);
 
                     nodes_.push_back(ui_node);
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
@@ -263,10 +263,10 @@ public:
 
                     UiNode ui_node;
                     ui_node.type = UiNodeType::device_memory_channel;
-                    // ui_node.ui.add.lhs = graph_.insert_node(value);
+                    ui_node.ui.device_memory_channel.data = graph_.insert_node(value);
                     ui_node.id = graph_.insert_node(op);
 
-                    // graph_.insert_edge(ui_node.id, ui_node.ui.add.lhs);
+                    graph_.insert_edge(ui_node.id, ui_node.ui.device_memory_channel.data);
                     
                     nodes_.push_back(ui_node);
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
@@ -675,14 +675,14 @@ public:
             break;
             case UiNodeType::device_memory_channel:
             {
-                const float node_width = 100.f;
+                const float node_width = 140.f;
                 ImNodes::BeginNode(node.id);
 
                 ImNodes::BeginNodeTitleBar();
                 ImGui::TextUnformatted("device memory channel");
                 ImNodes::EndNodeTitleBar();
                 {
-                    ImNodes::BeginInputAttribute(node.ui.add.lhs);
+                    ImNodes::BeginInputAttribute(node.ui.device_memory_channel.data);
                     ImGui::TextUnformatted("data");
                     ImNodes::EndInputAttribute();
                 }
@@ -709,8 +709,16 @@ public:
                 ImGui::TextUnformatted("VLC channel");
                 ImNodes::EndNodeTitleBar();
                 {
-                    ImNodes::BeginInputAttribute(node.ui.add.lhs);
+                    ImNodes::BeginInputAttribute(node.ui.vlc_channel.buffer);
                     ImGui::TextUnformatted("buffer");
+                    ImNodes::EndInputAttribute();
+                }
+
+                ImGui::Spacing();
+
+                {
+                    ImNodes::BeginInputAttribute(node.ui.vlc_channel.controls);
+                    ImGui::TextUnformatted("controls");
                     ImNodes::EndInputAttribute();
                 }
 
@@ -906,6 +914,7 @@ public:
             }
         }
 
+        // delete edge action
         {
             const int num_selected = ImNodes::NumSelectedLinks();
             if (num_selected > 0 && ImGui::IsKeyReleased(ImGuiKey_X))
@@ -920,6 +929,7 @@ public:
             }
         }
 
+        // delete node action
         {
             const int num_selected = ImNodes::NumSelectedNodes();
             if (num_selected > 0 && ImGui::IsKeyReleased(ImGuiKey_X))
@@ -1022,6 +1032,51 @@ private:
             {
                 int input;
             } sine;
+
+            struct
+            {
+                int data;
+            } device_memory_channel;
+
+            struct
+            {
+                int buffer, controls;
+            } vlc_channel;
+
+            struct
+            {
+                int input;
+            } audio_channel;
+
+            struct
+            {
+                int input;
+            } video_channel;
+
+            struct
+            {
+                int input;
+            } gpu_channel;
+
+            struct
+            {
+                int input;
+            } screen_channel;
+
+            struct
+            {
+                int input;
+            } monitor;
+
+            struct
+            {
+                int input;
+            } speakers;
+
+            struct
+            {
+                int input;
+            } ssd;
         } ui;
     };
 
