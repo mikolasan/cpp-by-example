@@ -26,6 +26,7 @@ std::string sha256_v3(const unsigned char* buffer, size_t size)
     unsigned int digest_length = 0;
     if (EVP_DigestFinal_ex(md_context, digest.data(), &digest_length) == 0)
         std::cerr << "SHA256 final failed" << std::endl;
+    EVP_MD_CTX_free(md_context);
 
     std::ostringstream ss;
     for (unsigned int i = 0; i < digest_length; ++i) {

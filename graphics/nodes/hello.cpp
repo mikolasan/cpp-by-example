@@ -16,7 +16,7 @@
 http://multiversesocial.com/web4.html
 
 ssd data -> device_memory_channel ->
-        -> data, controls vlc_channel -> audio, video, subtitles
+        -> data vlc_channel -> audio, video, subtitles
         -> audio_channel- > speakers
         -> video_channel ->
         -> gpu_channel ->
@@ -36,6 +36,8 @@ enum class NodeType
     time,
     device_memory_channel,
     vlc_channel,
+    vlc_channel_2,
+    vlc_channel_3,
     audio_channel,
     video_channel,
     gpu_channel,
@@ -63,7 +65,6 @@ T clamp(T x, T a, T b)
 }
 
 static float current_time_seconds = 0.f;
-static bool  emulate_three_button_mouse = false;
 
 ImU32 evaluate(const Graph<Node>& graph, const int root_node)
 {
@@ -209,15 +210,9 @@ public:
         }
 
         ImGui::TextUnformatted("Edit the color of the output color window using nodes.");
-        ImGui::Columns(2);
+        ImGui::Columns(1);
         ImGui::TextUnformatted("A -- add node");
         ImGui::TextUnformatted("X -- delete selected node or link");
-        ImGui::NextColumn();
-        if (ImGui::Checkbox("emulate_three_button_mouse", &emulate_three_button_mouse))
-        {
-            ImNodes::GetIO().EmulateThreeButtonMouse.Modifier =
-                emulate_three_button_mouse ? &ImGui::GetIO().KeyAlt : NULL;
-        }
         ImGui::Columns(1);
 
         ImNodes::BeginNodeEditor();
@@ -242,15 +237,19 @@ public:
                 {
                     const Node value(NodeType::value, 0.f);
                     const Node op(NodeType::vlc_channel);
+                    const Node op2(NodeType::vlc_channel);
+                    const Node op3(NodeType::vlc_channel);
 
                     UiNode ui_node;
                     ui_node.type = UiNodeType::vlc_channel;
                     ui_node.ui.vlc_channel.buffer = graph_.insert_node(value);
-                    ui_node.ui.vlc_channel.controls = graph_.insert_node(value);
                     ui_node.id = graph_.insert_node(op);
+                    ui_node.id2 = graph_.insert_node(op2);
+                    ui_node.id3 = graph_.insert_node(op3);
 
                     graph_.insert_edge(ui_node.id, ui_node.ui.vlc_channel.buffer);
-                    graph_.insert_edge(ui_node.id, ui_node.ui.vlc_channel.controls);
+                    graph_.insert_edge(ui_node.id2, ui_node.ui.vlc_channel.buffer);
+                    graph_.insert_edge(ui_node.id3, ui_node.ui.vlc_channel.buffer);
 
                     nodes_.push_back(ui_node);
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
@@ -267,6 +266,70 @@ public:
                     ui_node.id = graph_.insert_node(op);
 
                     graph_.insert_edge(ui_node.id, ui_node.ui.device_memory_channel.data);
+                    
+                    nodes_.push_back(ui_node);
+                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
+                }
+
+                if (ImGui::MenuItem("audio channel"))
+                {
+                    const Node value(NodeType::value, 0.f);
+                    const Node op(NodeType::audio_channel);
+
+                    UiNode ui_node;
+                    ui_node.type = UiNodeType::audio_channel;
+                    ui_node.ui.audio_channel.input = graph_.insert_node(value);
+                    ui_node.id = graph_.insert_node(op);
+
+                    graph_.insert_edge(ui_node.id, ui_node.ui.audio_channel.input);
+                    
+                    nodes_.push_back(ui_node);
+                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
+                }
+
+                if (ImGui::MenuItem("video channel"))
+                {
+                    const Node value(NodeType::value, 0.f);
+                    const Node op(NodeType::video_channel);
+
+                    UiNode ui_node;
+                    ui_node.type = UiNodeType::video_channel;
+                    ui_node.ui.video_channel.input = graph_.insert_node(value);
+                    ui_node.id = graph_.insert_node(op);
+
+                    graph_.insert_edge(ui_node.id, ui_node.ui.video_channel.input);
+                    
+                    nodes_.push_back(ui_node);
+                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
+                }
+
+                if (ImGui::MenuItem("GPU channel"))
+                {
+                    const Node value(NodeType::value, 0.f);
+                    const Node op(NodeType::gpu_channel);
+
+                    UiNode ui_node;
+                    ui_node.type = UiNodeType::gpu_channel;
+                    ui_node.ui.gpu_channel.input = graph_.insert_node(value);
+                    ui_node.id = graph_.insert_node(op);
+
+                    graph_.insert_edge(ui_node.id, ui_node.ui.gpu_channel.input);
+                    
+                    nodes_.push_back(ui_node);
+                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
+                }
+
+                if (ImGui::MenuItem("screen channel"))
+                {
+                    const Node value(NodeType::value, 0.f);
+                    const Node op(NodeType::screen_channel);
+
+                    UiNode ui_node;
+                    ui_node.type = UiNodeType::screen_channel;
+                    ui_node.ui.screen_channel.input = graph_.insert_node(value);
+                    ui_node.id = graph_.insert_node(op);
+
+                    graph_.insert_edge(ui_node.id, ui_node.ui.screen_channel.input);
                     
                     nodes_.push_back(ui_node);
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
@@ -290,67 +353,36 @@ public:
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
                 }
 
-                if (ImGui::MenuItem("output") && root_node_id_ == -1)
-                {
-                    const Node value(NodeType::value, 0.f);
-                    const Node out(NodeType::output);
-
-                    UiNode ui_node;
-                    ui_node.type = UiNodeType::output;
-                    ui_node.ui.output.r = graph_.insert_node(value);
-                    ui_node.ui.output.g = graph_.insert_node(value);
-                    ui_node.ui.output.b = graph_.insert_node(value);
-                    ui_node.id = graph_.insert_node(out);
-
-                    graph_.insert_edge(ui_node.id, ui_node.ui.output.r);
-                    graph_.insert_edge(ui_node.id, ui_node.ui.output.g);
-                    graph_.insert_edge(ui_node.id, ui_node.ui.output.b);
-
-                    nodes_.push_back(ui_node);
-                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                    root_node_id_ = ui_node.id;
-                }
-
                 if (ImGui::MenuItem("speakers") && root_node_id_ == -1)
                 {
                     const Node value(NodeType::value, 0.f);
-                    const Node out(NodeType::output);
+                    const Node out(NodeType::speakers);
 
                     UiNode ui_node;
-                    ui_node.type = UiNodeType::output;
-                    ui_node.ui.output.r = graph_.insert_node(value);
-                    ui_node.ui.output.g = graph_.insert_node(value);
-                    ui_node.ui.output.b = graph_.insert_node(value);
+                    ui_node.type = UiNodeType::speakers;
+                    ui_node.ui.speakers.input = graph_.insert_node(value);
                     ui_node.id = graph_.insert_node(out);
 
-                    graph_.insert_edge(ui_node.id, ui_node.ui.output.r);
-                    graph_.insert_edge(ui_node.id, ui_node.ui.output.g);
-                    graph_.insert_edge(ui_node.id, ui_node.ui.output.b);
+                    graph_.insert_edge(ui_node.id, ui_node.ui.speakers.input);
 
                     nodes_.push_back(ui_node);
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                    root_node_id_ = ui_node.id;
                 }
 
                 if (ImGui::MenuItem("monitor") && root_node_id_ == -1)
                 {
                     const Node value(NodeType::value, 0.f);
-                    const Node out(NodeType::output);
+                    const Node out(NodeType::monitor);
 
                     UiNode ui_node;
-                    ui_node.type = UiNodeType::output;
-                    ui_node.ui.output.r = graph_.insert_node(value);
-                    ui_node.ui.output.g = graph_.insert_node(value);
-                    ui_node.ui.output.b = graph_.insert_node(value);
+                    ui_node.type = UiNodeType::monitor;
+                    ui_node.ui.monitor.input = graph_.insert_node(value);
                     ui_node.id = graph_.insert_node(out);
 
-                    graph_.insert_edge(ui_node.id, ui_node.ui.output.r);
-                    graph_.insert_edge(ui_node.id, ui_node.ui.output.g);
-                    graph_.insert_edge(ui_node.id, ui_node.ui.output.b);
+                    graph_.insert_edge(ui_node.id, ui_node.ui.monitor.input);
 
                     nodes_.push_back(ui_node);
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                    root_node_id_ = ui_node.id;
                 }
 
                 if (ImGui::MenuItem("sine"))
@@ -666,7 +698,7 @@ public:
                 ImGui::TextUnformatted("speakers");
                 ImNodes::EndNodeTitleBar();
 
-                ImNodes::BeginInputAttribute(node.ui.output.r);
+                ImNodes::BeginInputAttribute(node.ui.speakers.input);
                 ImGui::Text("sound");
                 ImNodes::EndInputAttribute();
 
@@ -717,14 +749,6 @@ public:
                 ImGui::Spacing();
 
                 {
-                    ImNodes::BeginInputAttribute(node.ui.vlc_channel.controls);
-                    ImGui::TextUnformatted("controls");
-                    ImNodes::EndInputAttribute();
-                }
-
-                ImGui::Spacing();
-
-                {
                     ImNodes::BeginOutputAttribute(node.id);
                     const float label_width = ImGui::CalcTextSize("audio buffer").x;
                     ImGui::Indent(node_width - label_width);
@@ -735,7 +759,7 @@ public:
                 ImGui::Spacing();
 
                 {
-                    ImNodes::BeginOutputAttribute(node.id);
+                    ImNodes::BeginOutputAttribute(node.id2);
                     const float label_width = ImGui::CalcTextSize("video buffer").x;
                     ImGui::Indent(node_width - label_width);
                     ImGui::TextUnformatted("video buffer");
@@ -745,7 +769,7 @@ public:
                 ImGui::Spacing();
 
                 {
-                    ImNodes::BeginOutputAttribute(node.id);
+                    ImNodes::BeginOutputAttribute(node.id3);
                     const float label_width = ImGui::CalcTextSize("subtitles buffer").x;
                     ImGui::Indent(node_width - label_width);
                     ImGui::TextUnformatted("subtitles buffer");
@@ -764,7 +788,7 @@ public:
                 ImGui::TextUnformatted("audio channel");
                 ImNodes::EndNodeTitleBar();
                 {
-                    ImNodes::BeginInputAttribute(node.ui.add.lhs);
+                    ImNodes::BeginInputAttribute(node.ui.audio_channel.input);
                     ImGui::TextUnformatted("audio buffer");
                     ImNodes::EndInputAttribute();
                 }
@@ -842,7 +866,7 @@ public:
                 ImNodes::BeginNode(node.id);
 
                 ImNodes::BeginNodeTitleBar();
-                ImGui::TextUnformatted("GPU channel");
+                ImGui::TextUnformatted("screen channel");
                 ImNodes::EndNodeTitleBar();
                 {
                     ImNodes::BeginInputAttribute(node.ui.add.lhs);
@@ -1010,6 +1034,8 @@ private:
         // this is the "operation" node id. The additional input nodes are
         // stored in the structs.
         int id;
+        int id2;
+        int id3;
 
         union
         {
@@ -1040,7 +1066,7 @@ private:
 
             struct
             {
-                int buffer, controls;
+                int buffer;
             } vlc_channel;
 
             struct
