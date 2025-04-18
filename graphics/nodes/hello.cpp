@@ -671,9 +671,11 @@ public:
             break;
             case UiNodeType::monitor:
             {
-                // ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(11, 109, 191, 255));
-                // ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(45, 126, 194, 255));
-                // ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(81, 148, 204, 255));
+                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(42, 26, 31, 255));
+                ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(51, 31, 38, 255));
+                ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(38, 23, 28, 255));
+                ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(228, 87, 46, 255));
+                ImNodes::PushColorStyle(ImNodesCol_PinHovered, IM_COL32(217, 72, 28, 255));
                 ImNodes::BeginNode(node.id);
 
                 ImNodes::BeginNodeTitleBar();
@@ -685,13 +687,18 @@ public:
                 ImNodes::EndInputAttribute();
 
                 ImNodes::EndNode();
-                // ImNodes::PopColorStyle();
-                // ImNodes::PopColorStyle();
-                // ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
             }
             break;
             case UiNodeType::speakers:
             {
+                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(42, 26, 31, 255));
+                ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(51, 31, 38, 255));
+                ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(38, 23, 28, 255));
                 ImNodes::BeginNode(node.id);
 
                 ImNodes::BeginNodeTitleBar();
@@ -703,6 +710,9 @@ public:
                 ImNodes::EndInputAttribute();
 
                 ImNodes::EndNode();
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
             }
             break;
             case UiNodeType::device_memory_channel:
@@ -877,11 +887,15 @@ public:
                 ImGui::Spacing();
 
                 {
+                    ImNodes::PushColorStyle(ImNodesCol_Pin, IM_COL32(228, 87, 46, 255));
+                    ImNodes::PushColorStyle(ImNodesCol_PinHovered, IM_COL32(217, 72, 28, 255));
                     ImNodes::BeginOutputAttribute(node.id);
-                    const float label_width = ImGui::CalcTextSize("monitor").x;
+                    const float label_width = ImGui::CalcTextSize("screen").x;
                     ImGui::Indent(node_width - label_width);
-                    ImGui::TextUnformatted("monitor");
+                    ImGui::TextUnformatted("screen");
                     ImNodes::EndOutputAttribute();
+                    ImNodes::PopColorStyle();
+                    ImNodes::PopColorStyle();
                 }
 
                 ImNodes::EndNode();
@@ -895,10 +909,23 @@ public:
             // If edge doesn't start at value, then it's an internal edge, i.e.
             // an edge which links a node's operation to its input. We don't
             // want to render node internals with visible links.
-            if (graph_.node(edge.from).type != NodeType::value)
+            NodeType type = graph_.node(edge.from).type;
+            if (type != NodeType::value)
                 continue;
 
+            if (type == NodeType::video_channel) {
+                ImNodes::PushColorStyle(ImNodesCol_Link, IM_COL32(228, 87, 46, 255));
+                ImNodes::PushColorStyle(ImNodesCol_LinkHovered, IM_COL32(217, 72, 28, 255));
+                ImNodes::PushColorStyle(ImNodesCol_LinkSelected, IM_COL32(217, 72, 28, 255));
+            }
+            
             ImNodes::Link(edge.id, edge.from, edge.to);
+            
+            if (type == NodeType::video_channel) {
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
+                ImNodes::PopColorStyle();
+            }
         }
 
         ImNodes::MiniMap(0.2f, minimap_location_);

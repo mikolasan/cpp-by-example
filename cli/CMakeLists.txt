@@ -16,7 +16,7 @@ FetchContent_Declare(ftxui
 )
 
 FetchContent_Declare(nlohmann_json
-  URL https://github.com/nlohmann/json/releases/download/v3.10.5/json.tar.xz
+  URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
   EXCLUDE_FROM_ALL
   FIND_PACKAGE_ARGS NAMES nlohmann_json
 )

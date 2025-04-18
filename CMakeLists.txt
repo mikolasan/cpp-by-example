@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # thirdparty
 add_subdirectory(thirdparty/rapidyaml)
+include_directories(thirdparty/json)
 
 ## windows
 ### SDL2
