@@ -9,6 +9,16 @@ A collection of code snippets in C++ language
 
 ## Optional dependencies
 
+## bgfx
+
+Open MSVC terminal
+
+```
+cd graphics\bgfx
+..\bx\tools\bin\windows\genie --with-shared-lib --with-tools --with-sdl vs2022
+start .build/projects/vs2022/bgfx.sln
+```
+
 ### LLVM
 
 ```
@@ -34,4 +44,12 @@ Lua51_ROOT = "C:\<path_to_cpp-skill>\windows\lua"
 ```
 cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 cmake --build build --target all
+```
+
+## The book
+
+Run locally:
+
+```
+mdbook serve
 ```

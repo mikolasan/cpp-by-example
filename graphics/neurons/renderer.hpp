@@ -1,3 +1,7 @@
+#include <vector>
+#include <bgfx/bgfx.h>
+
+#include "network.hpp"
 
 struct RenderNeuron {
     float x, y, z;

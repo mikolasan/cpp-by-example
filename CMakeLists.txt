@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
-
+if(POLICY CMP0091)
+  cmake_policy(SET CMP0091 NEW) 
+endif()
 project(cpp_by_example VERSION 0.0.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -17,7 +19,7 @@ find_package(SDL2 CONFIG REQUIRED)
 
 add_subdirectory(audio)
 add_subdirectory(basics)
-add_subdirectory(cli)
+# add_subdirectory(cli)
 add_subdirectory(combinatorics)
 # OpenSSL required
 # add_subdirectory(cryptography)
