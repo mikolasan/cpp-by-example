@@ -3,16 +3,22 @@
 #include "neuron.hpp"
 #include "synapse.hpp"
 
-struct SNN {
+struct Network {
     std::vector<Neuron> neurons;
     std::vector<std::vector<Synapse>> synapses;
     float dt = 1.0f;
     float time = 0.0f;
 
-    SNN(int N) {
+    explicit Network() = default;
+
+    Network(int N) {
+        setSize(N);
+        // Init weights, if desired
+    }
+
+    void setSize(int N) {
         neurons.resize(N);
         synapses.resize(N, std::vector<Synapse>(N));
-        // Init weights, if desired
     }
 
     void step() {

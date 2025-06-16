@@ -2,7 +2,7 @@
 #include <iostream>
 
 int main() {
-    SNN net(10);
+    Network net(10);
     for (int t = 0; t < 1000; ++t) {
         net.neurons[0].v += 1.5f;  // inject current to neuron 0
         net.step();
