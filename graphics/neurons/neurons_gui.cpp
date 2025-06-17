@@ -76,8 +76,8 @@ static const uint16_t s_cubeIndices[36] =
 void generateSphereMesh(
     std::vector<PosColorVertex>& vertices,
     std::vector<uint16_t>& indices,
-    int stacks = 2, // vertical segments (horizontal lines make stack of pancakes)
-    int slices = 4, // horizontal segments (vertical lines make slices like with apples or oranges)
+    int stacks = 8, // vertical segments (horizontal lines make stack of pancakes)
+    int slices = 16, // horizontal segments (vertical lines make slices like with apples or oranges)
     float radius = 1.0f)
 {
     vertices.clear();
@@ -143,15 +143,40 @@ void generateSphereMesh(
             int row1 = i * (slices + 1);
             int row2 = (i + 1) * (slices + 1);
 
-            // triangle 1
-            indices.push_back(uint16_t(row1 + j));
-            indices.push_back(uint16_t(row2 + j));
-            indices.push_back(uint16_t(row2 + j + 1));
-            // triangle 2
-            indices.push_back(uint16_t(row1 + j));
-            indices.push_back(uint16_t(row2 + j + 1));
-            indices.push_back(uint16_t(row1 + j + 1));
+						uint16_t a = row1 + j;
+						uint16_t b = row2 + j;
+						uint16_t c = row2 + j + 1;
+						uint16_t d = row1 + j + 1;
+
+            // // triangle 1
+            // indices.push_back(uint16_t(row1 + j));
+            // indices.push_back(uint16_t(row2 + j));
+            // indices.push_back(uint16_t(row2 + j + 1));
+            // // triangle 2
+            // indices.push_back(uint16_t(row1 + j));
+            // indices.push_back(uint16_t(row2 + j + 1));
+            // indices.push_back(uint16_t(row1 + j + 1));
             // = one quad
+
+						// // Triangle 1 (a, b, c)
+						indices.push_back(a);
+						indices.push_back(b);
+						indices.push_back(c);
+
+						// Triangle 2 (a, c, d)
+						indices.push_back(a);
+						indices.push_back(c);
+						indices.push_back(d);
+
+						// Triangle 1 (flip b, a, c)
+						// indices.push_back(b);
+						// indices.push_back(a);
+						// indices.push_back(c);
+
+						// // Triangle 2 (flip c, a, d)
+						// indices.push_back(c);
+						// indices.push_back(a);
+						// indices.push_back(d);
         }
     }
 }
@@ -190,7 +215,7 @@ public:
 		m_reset  = BGFX_RESET_VSYNC;
 		m_useInstancing    = true;
 		m_lastFrameMissing = 0;
-		m_sideSize         = 1;
+		m_sideSize         = 10;
 
 		bgfx::Init init;
 		init.type     = args.m_type;
@@ -384,28 +409,44 @@ public:
 				bgfx::InstanceDataBuffer idb;
 				bgfx::allocInstanceDataBuffer(&idb, drawnCubes, instanceStride);
 
-				// uint8_t* data = idb.data;
+				uint8_t* data = idb.data;
 
-				// for (uint32_t ii = 0; ii < drawnCubes; ++ii)
-				// {
-				// 	uint32_t yy = ii / m_sideSize;
-				// 	uint32_t xx = ii % m_sideSize;
+				for (uint32_t ii = 0; ii < drawnCubes; ++ii)
+				{
+					uint32_t yy = ii / m_sideSize;
+					uint32_t xx = ii % m_sideSize;
 
-				// 	float* mtx = (float*)data;
-				// 	// bx::mtxRotateXY(mtx, time + xx * 0.21f, time + yy * 0.37f);
-				// 	// mtx[12] = -15.0f + float(xx) * 3.0f;
-				// 	// mtx[13] = -15.0f + float(yy) * 3.0f;
-				// 	// mtx[14] = 0.0f;
+					float* mtx = (float*)data;
+					// bx::mtxRotateXY(mtx, time, time);
+					// bx::mtxRotateXY(mtx, xx * 0.1f, yy * 0.1f);
+					bx::mtxRotateXY(mtx, time + xx * 0.21f, time + yy * 0.37f);
 
-				// 	float* color = (float*)&data[64];
-				// 	color[0] = bx::sin(time + float(xx) / 11.0f) * 0.5f + 0.5f;
-				// 	color[1] = bx::cos(time + float(yy) / 11.0f) * 0.5f + 0.5f;
-				// 	color[2] = bx::sin(time * 3.0f) * 0.5f + 0.5f;
-				// 	color[3] = 1.0f;
+					// in column-major 4×4 transformation matrix the translation vector
+					// | ... ... ... tx |
+					// | ... ... ... ty |
+					// | ... ... ... tz |
+					// | ... ... ...  1 |
+					// indices
+					// |  0   4   8  12 |
+					// |  1   5   9  13 |
+					// |  2   6  10  14 |
+					// |  3   7  11  15 |
 
-				// 	data += instanceStride;
-				// }
+					mtx[12] = -15.0f + float(xx) * 3.0f;
+					mtx[13] = -15.0f + float(yy) * 3.0f;
+					mtx[14] = 0.0f;
 
+					float* color = (float*)&data[64];
+					color[0] = bx::sin(time + float(xx) / 11.0f) * 0.5f + 0.5f;
+					color[1] = bx::cos(time + float(yy) / 11.0f) * 0.5f + 0.5f;
+					color[2] = bx::sin(time * 3.0f) * 0.5f + 0.5f;
+					color[3] = 1.0f;
+
+					data += instanceStride;
+					// bgfx::setTransform(mtx);
+				}
+
+				
 				// Set vertex and index buffer.
 				bgfx::setVertexBuffer(0, m_vbh);
 				bgfx::setIndexBuffer(m_ibh);
