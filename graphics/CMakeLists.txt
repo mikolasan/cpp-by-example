@@ -85,6 +85,9 @@ add_executable(neurons_gui
     thirdparty/imgui/backends/imgui_impl_sdl2.cpp
     neurons/renderer.cpp
     neurons/network.hpp
+    neurons/render/neuron_render.hpp
+    neurons/render/neuron_render.cpp
+    neurons/render/network_render.hpp
     neurons/neurons_gui.cpp
 )
 
@@ -97,6 +100,7 @@ target_include_directories(neurons_gui PRIVATE
     thirdparty/imgui/backends 
     bgfx_ext
     imgui_ext 
+    neurons
 )
 
 if (MSVC)

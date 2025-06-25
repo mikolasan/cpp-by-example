@@ -1,13 +1,20 @@
 #pragma once
+
+#include <memory>
 #include <vector>
+
 #include "neuron.hpp"
 #include "synapse.hpp"
+#include "render_strategy.h"
+
 
 struct Network {
     std::vector<Neuron> neurons;
     std::vector<std::vector<Synapse>> synapses;
     float dt = 1.0f;
     float time = 0.0f;
+
+    std::shared_ptr<RenderStrategy> render;
 
     explicit Network() = default;
 
@@ -51,5 +58,23 @@ struct Network {
         }
 
         time += dt;
+    }
+
+    void init() {
+        if (render) render->init();
+    }
+
+    void draw() const {
+        if (render) render->draw();
+    }
+
+    // void draw() const {
+    //     for (auto& n : neurons) {
+    //         n.draw();
+    //     }
+    // }
+
+    void update(float input, float dt, float t) {
+        if (render) render->update(dt);
     }
 };

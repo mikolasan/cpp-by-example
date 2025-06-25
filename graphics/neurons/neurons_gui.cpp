@@ -18,169 +18,38 @@
 namespace
 {
 
+	// // cube
 
+	// static PosColorVertex s_cubeVertices[8] =
+	// {
+	// 	{-1.0f,  1.0f,  1.0f, 0xff000000 },
+	// 	{ 1.0f,  1.0f,  1.0f, 0xff0000ff },
+	// 	{-1.0f, -1.0f,  1.0f, 0xff00ff00 },
+	// 	{ 1.0f, -1.0f,  1.0f, 0xff00ffff },
+	// 	{-1.0f,  1.0f, -1.0f, 0xffff0000 },
+	// 	{ 1.0f,  1.0f, -1.0f, 0xffff00ff },
+	// 	{-1.0f, -1.0f, -1.0f, 0xffffff00 },
+	// 	{ 1.0f, -1.0f, -1.0f, 0xffffffff },
+	// };
 
-	struct PosColorVertex
-	{
-		float m_x;
-		float m_y;
-		float m_z;
-		uint32_t m_abgr;
-
-		static void init()
-		{
-			ms_layout
-				.begin()
-				.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-				.add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-				.end();
-		};
-
-		static bgfx::VertexLayout ms_layout;
-	};
-
-	bgfx::VertexLayout PosColorVertex::ms_layout;
-
-	// cube
-
-	static PosColorVertex s_cubeVertices[8] =
-	{
-		{-1.0f,  1.0f,  1.0f, 0xff000000 },
-		{ 1.0f,  1.0f,  1.0f, 0xff0000ff },
-		{-1.0f, -1.0f,  1.0f, 0xff00ff00 },
-		{ 1.0f, -1.0f,  1.0f, 0xff00ffff },
-		{-1.0f,  1.0f, -1.0f, 0xffff0000 },
-		{ 1.0f,  1.0f, -1.0f, 0xffff00ff },
-		{-1.0f, -1.0f, -1.0f, 0xffffff00 },
-		{ 1.0f, -1.0f, -1.0f, 0xffffffff },
-	};
-
-	static const uint16_t s_cubeIndices[36] =
-	{
-		0, 1, 2, // 0
-		1, 3, 2,
-		4, 6, 5, // 2
-		5, 6, 7,
-		0, 2, 4, // 4
-		4, 2, 6,
-		1, 5, 3, // 6
-		5, 7, 3,
-		0, 4, 1, // 8
-		4, 5, 1,
-		2, 3, 6, // 10
-		6, 3, 7,
-	};
+	// static const uint16_t s_cubeIndices[36] =
+	// {
+	// 	0, 1, 2, // 0
+	// 	1, 3, 2,
+	// 	4, 6, 5, // 2
+	// 	5, 6, 7,
+	// 	0, 2, 4, // 4
+	// 	4, 2, 6,
+	// 	1, 5, 3, // 6
+	// 	5, 7, 3,
+	// 	0, 4, 1, // 8
+	// 	4, 5, 1,
+	// 	2, 3, 6, // 10
+	// 	6, 3, 7,
+	// };
 
 	// sphere
-
-	void generateSphereMesh(
-		std::vector<PosColorVertex>& vertices,
-		std::vector<uint16_t>& indices,
-		int stacks = 3, // vertical segments (horizontal lines make stack of pancakes)
-		int slices = 5, // horizontal segments (vertical lines make slices like with apples or oranges)
-		float radius = 1.0f)
-	{
-		vertices.clear();
-		vertices.reserve((stacks + 1) * (slices + 1));
-		indices.clear();
-
-		for (int i = 0; i <= stacks; ++i)
-		{
-			// going from top to bottom
-
-			float v = float(i) / stacks;
-			float phi = v * bx::kPi; // 0 to π
-
-			for (int j = 0; j <= slices; ++j)
-			{
-				float u = float(j) / slices;
-				float theta = u * bx::kPi * 2.0f; // 0 to 2π
-
-				float x = sinf(phi) * cosf(theta);
-				float y = cosf(phi);
-				float z = sinf(phi) * sinf(theta);
-
-				PosColorVertex vtx;
-				vtx.m_x = x * radius;
-				vtx.m_y = y * radius;
-				vtx.m_z = z * radius;
-
-				// Color based on position for debugging
-				uint8_t r = uint8_t((x * 0.5f + 0.5f) * 255);
-				uint8_t g = uint8_t((y * 0.5f + 0.5f) * 255);
-				uint8_t b = uint8_t((z * 0.5f + 0.5f) * 255);
-				vtx.m_abgr = (r) | (g << 8) | (b << 16) | 0xff000000;
-
-				vertices.push_back(vtx);
-			}
-		}
-
-		// Generate indices
-
-		//   V03----------V02----------V01---------V00 
-		//    |            |        __/ |        __/|
-		//    |            |     __/    |  c  __/   |
-		//    |            |  __/       |  __/      |
-		//    |            | /        f | /     d   |
-		//   V13----------V12----------V11----------V10 
-		//    |            |        __/ | e      __/|
-		//    |            |  a  __/    |     __/   |
-		//    |            |  __/       |  __/      |
-		//    |            | /      b   | /         |
-		//   V23----------V22----------V21----------V20 
-		//    |            |            |           |
-		//    |            |            |           |
-		//    |            |            |           |
-		//    |            |            |           |
-		//   V33----------V32----------V31---------V30 
-
-		for (int i = 0; i < stacks; ++i)
-		{
-			// going from top to bottom
-
-			for (int j = 0; j < slices; ++j)
-			{
-				int row1 = i * (slices + 1);
-				int row2 = (i + 1) * (slices + 1);
-
-				uint16_t a = row1 + j;
-				uint16_t b = row2 + j;
-				uint16_t c = row2 + j + 1;
-				uint16_t d = row1 + j + 1;
-
-				// // triangle 1
-				// indices.push_back(uint16_t(row1 + j));
-				// indices.push_back(uint16_t(row2 + j));
-				// indices.push_back(uint16_t(row2 + j + 1));
-				// // triangle 2
-				// indices.push_back(uint16_t(row1 + j));
-				// indices.push_back(uint16_t(row2 + j + 1));
-				// indices.push_back(uint16_t(row1 + j + 1));
-				// = one quad
-
-				// // // Triangle 1 (a, b, c)
-				// indices.push_back(a);
-				// indices.push_back(b);
-				// indices.push_back(c);
-
-				// // Triangle 2 (a, c, d)
-				// indices.push_back(a);
-				// indices.push_back(c);
-				// indices.push_back(d);
-
-				// Triangle 1 (flip b, a, c)
-				indices.push_back(b);
-				indices.push_back(a);
-				indices.push_back(c);
-
-				// // Triangle 2 (flip c, a, d)
-				indices.push_back(c);
-				indices.push_back(a);
-				indices.push_back(d);
-			}
-		}
-	}
-
+	
 	class ExampleHelloWorld : public entry::AppI
 	{
 	public:
@@ -188,22 +57,22 @@ namespace
 			: entry::AppI("NEUF", "spiking network simulator", "")
 		{
 			net.setSize(n_neurons);
+			auto ctx = std::make_shared<NetworkVisualContext>();
+		  ctx->net = net;
+
+			const float offset = 3.0f;
+		  for (size_t i = 0; i < net.neurons.size(); ++i) {
+		      float angle = i * 2 * bx::kPi / net.neurons.size();
+					auto ctx2 = std::make_shared<NeuronVisualContext>();
+		      ctx2->positions.emplace_back(
+						cos(angle)*offset,
+						sin(angle)*offset, 
+						0.0f);
+		  		auto render_strategy = std::make_shared<NeuronRenderStrategy>(ctx2);
+					net.neurons[i].strategy = render_strategy;
+		  }
+
 		}
-
-		// void setup_visuals(Network& net) {
-		//   auto ctx = std::make_shared<VisualContext>();
-		//   ctx->net = net;
-
-		//   for (size_t i = 0; i < net.neurons.size(); ++i) {
-		//       float angle = i * 2 * M_PI / net.neurons.size();
-		//       ctx->positions.emplace_back(cos(angle)*5.0f, sin(angle)*5.0f, 0.0f);
-		//   }
-
-		//   auto render_strategy = std::make_shared<RenderNeuronStrategy>(ctx);
-
-		//   for (auto& n : net.neurons)
-		//       n.strategy = render_strategy;
-		// }
 
 		void init(int32_t _argc, const char* const* _argv, uint32_t _width, uint32_t _height) override
 		{
@@ -243,35 +112,7 @@ namespace
 			// Create vertex stream declaration.
 			PosColorVertex::init();
 
-			std::vector<PosColorVertex> vertices;
-			std::vector<uint16_t> indices;
-			generateSphereMesh(vertices, indices);
-
-			std::cout << "vertices" << std::endl;
-			for (const auto& v : vertices) {
-				std::cout << "(" << v.m_x << ", "
-					<< v.m_y << ", "
-					<< v.m_z << ") ";
-			}
-			std::cout << std::endl;
-
-			std::cout << "indices" << std::endl;
-			for (const auto& i : indices) {
-				std::cout << i << " ";
-			}
-			std::cout << std::endl;
-
-			// Create static vertex buffer.
-			m_vbh = bgfx::createVertexBuffer(
-				bgfx::makeRef(vertices.data(), uint32_t(vertices.size() * sizeof(PosColorVertex)))
-				, PosColorVertex::ms_layout
-			);
-
-			// Create static index buffer.
-			m_ibh = bgfx::createIndexBuffer(
-				bgfx::makeRef(indices.data(), uint32_t(indices.size() * sizeof(uint16_t)))
-			);
-
+			
 			// Create program from shaders.
 			m_program = loadProgram("vs_instancing", "fs_instancing");
 			m_program_non_instanced = loadProgram("vs_cubes", "fs_cubes");
@@ -286,8 +127,6 @@ namespace
 			imguiDestroy();
 
 			// Cleanup.
-			bgfx::destroy(m_ibh);
-			bgfx::destroy(m_vbh);
 			bgfx::destroy(m_program);
 			bgfx::destroy(m_program_non_instanced);
 
@@ -392,102 +231,71 @@ namespace
 				}
 
 				m_lastFrameMissing = 0;
+				
+				net.draw();
+				
 
-				if (m_useInstancing)
+				// 80 bytes stride = 64 bytes for 4x4 matrix + 16 bytes for RGBA color.
+				const uint16_t instanceStride = 80;
+				// to total number of instances to draw
+				uint32_t totalCubes = m_sideSize * m_sideSize;
+
+				// figure out how big of a buffer is available
+				uint32_t drawnCubes = bgfx::getAvailInstanceDataBuffer(totalCubes, instanceStride);
+
+				// save how many we couldn't draw due to buffer room so we can display it
+				m_lastFrameMissing = totalCubes - drawnCubes;
+
+				bgfx::InstanceDataBuffer idb;
+				bgfx::allocInstanceDataBuffer(&idb, drawnCubes, instanceStride);
+
+				uint8_t* data = idb.data;
+
+				for (uint32_t ii = 0; ii < drawnCubes; ++ii)
 				{
-					// 80 bytes stride = 64 bytes for 4x4 matrix + 16 bytes for RGBA color.
-					const uint16_t instanceStride = 80;
-					// to total number of instances to draw
-					uint32_t totalCubes = m_sideSize * m_sideSize;
+					uint32_t yy = ii / m_sideSize;
+					uint32_t xx = ii % m_sideSize;
 
-					// figure out how big of a buffer is available
-					uint32_t drawnCubes = bgfx::getAvailInstanceDataBuffer(totalCubes, instanceStride);
+					float* mtx = (float*)data;
+					bx::mtxRotateXY(mtx, time + xx * 0.21f, time + yy * 0.37f);
 
-					// save how many we couldn't draw due to buffer room so we can display it
-					m_lastFrameMissing = totalCubes - drawnCubes;
+					// in column-major 4×4 transformation matrix the translation vector
+					// | ... ... ... tx |
+					// | ... ... ... ty |
+					// | ... ... ... tz |
+					// | ... ... ...  1 |
+					// indices
+					// |  0   4   8  12 |
+					// |  1   5   9  13 |
+					// |  2   6  10  14 |
+					// |  3   7  11  15 |
 
-					bgfx::InstanceDataBuffer idb;
-					bgfx::allocInstanceDataBuffer(&idb, drawnCubes, instanceStride);
+					mtx[12] = -15.0f + float(xx) * 3.0f;
+					mtx[13] = -15.0f + float(yy) * 3.0f;
+					mtx[14] = 0.0f;
 
-					uint8_t* data = idb.data;
+					float* color = (float*)&data[64];
+					color[0] = bx::sin(time + float(xx) / 11.0f) * 0.5f + 0.5f;
+					color[1] = bx::cos(time + float(yy) / 11.0f) * 0.5f + 0.5f;
+					color[2] = bx::sin(time * 3.0f) * 0.5f + 0.5f;
+					color[3] = 1.0f;
 
-					for (uint32_t ii = 0; ii < drawnCubes; ++ii)
-					{
-						uint32_t yy = ii / m_sideSize;
-						uint32_t xx = ii % m_sideSize;
-
-						float* mtx = (float*)data;
-						// bx::mtxRotateXY(mtx, time, time);
-						// bx::mtxRotateXY(mtx, xx * 0.1f, yy * 0.1f);
-						bx::mtxRotateXY(mtx, time + xx * 0.21f, time + yy * 0.37f);
-
-						// in column-major 4×4 transformation matrix the translation vector
-						// | ... ... ... tx |
-						// | ... ... ... ty |
-						// | ... ... ... tz |
-						// | ... ... ...  1 |
-						// indices
-						// |  0   4   8  12 |
-						// |  1   5   9  13 |
-						// |  2   6  10  14 |
-						// |  3   7  11  15 |
-
-						mtx[12] = -15.0f + float(xx) * 3.0f;
-						mtx[13] = -15.0f + float(yy) * 3.0f;
-						mtx[14] = 0.0f;
-
-						float* color = (float*)&data[64];
-						color[0] = bx::sin(time + float(xx) / 11.0f) * 0.5f + 0.5f;
-						color[1] = bx::cos(time + float(yy) / 11.0f) * 0.5f + 0.5f;
-						color[2] = bx::sin(time * 3.0f) * 0.5f + 0.5f;
-						color[3] = 1.0f;
-
-						data += instanceStride;
-						// bgfx::setTransform(mtx);
-					}
-
-
-					// Set vertex and index buffer.
-					bgfx::setVertexBuffer(0, m_vbh);
-					bgfx::setIndexBuffer(m_ibh);
-
-					// Set instance data buffer.
-					bgfx::setInstanceDataBuffer(&idb);
-
-					// Set render states.
-					bgfx::setState(BGFX_STATE_DEFAULT);
-
-					// Submit primitive for rendering to view 0.
-					bgfx::submit(0, m_program);
+					data += instanceStride;
 				}
-				else
-				{
-					// non-instanced path
-					for (uint32_t yy = 0; yy < m_sideSize; ++yy)
-					{
-						for (uint32_t xx = 0; xx < m_sideSize; ++xx)
-						{
-							float mtx[16];
-							bx::mtxRotateXY(mtx, time + xx * 0.21f, time + yy * 0.37f);
-							mtx[12] = -15.0f + float(xx) * 3.0f;
-							mtx[13] = -15.0f + float(yy) * 3.0f;
-							mtx[14] = 0.0f;
 
-							// Set model matrix for rendering.
-							bgfx::setTransform(mtx);
 
-							// Set vertex and index buffer.
-							bgfx::setVertexBuffer(0, m_vbh);
-							bgfx::setIndexBuffer(m_ibh);
+				// Set vertex and index buffer.
+				bgfx::setVertexBuffer(0, m_vbh);
+				bgfx::setIndexBuffer(m_ibh);
 
-							// Set render states.
-							bgfx::setState(BGFX_STATE_DEFAULT);
+				// Set instance data buffer.
+				bgfx::setInstanceDataBuffer(&idb);
 
-							// Submit primitive for rendering to view 0.
-							bgfx::submit(0, m_program_non_instanced);
-						}
-					}
-				}
+				// Set render states.
+				bgfx::setState(BGFX_STATE_DEFAULT);
+
+				// Submit primitive for rendering to view 0.
+				bgfx::submit(0, m_program);
 
 				// Advance to next frame. Rendering thread will be kicked to
 				// process submitted rendering primitives.
@@ -510,8 +318,6 @@ namespace
 		uint32_t m_lastFrameMissing;
 		uint32_t m_sideSize;
 
-		bgfx::VertexBufferHandle m_vbh;
-		bgfx::IndexBufferHandle  m_ibh;
 		bgfx::ProgramHandle m_program;
 		bgfx::ProgramHandle m_program_non_instanced;
 
