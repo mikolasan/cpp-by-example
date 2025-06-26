@@ -9,6 +9,7 @@
 
 #include "render_strategy.h"
 
+
 struct Neuron;
 
 struct PosColorVertex
@@ -34,6 +35,8 @@ struct NeuronVisualContext : VisualContext {
   size_t idx;
   std::vector<bx::Vec3> positions;
   Neuron& neuron;
+
+  explicit NeuronVisualContext(Neuron& neuron) : neuron(neuron) {}
 };
 
 // TODO: many classes have one instance of subclass 
@@ -45,7 +48,7 @@ struct NeuronRenderStrategy : RenderStrategy {
     ctx(ctx) {
   }
 
-  void generateSphereMesh(
+  static void generateSphereMesh(
     std::vector<PosColorVertex>& vertices,
     std::vector<uint16_t>& indices,
     int stacks = 3, // vertical segments (horizontal lines make stack of pancakes)
@@ -53,6 +56,14 @@ struct NeuronRenderStrategy : RenderStrategy {
     float radius = 1.0f);
 
   void init() override {
+    std::cerr << "call 'init_once' instead" << std::endl;
+  }
+
+  static void init_once() {
+  
+    PosColorVertex::init();
+
+
     std::vector<PosColorVertex> vertices;
     std::vector<uint16_t> indices;
     generateSphereMesh(vertices, indices);
@@ -82,23 +93,26 @@ struct NeuronRenderStrategy : RenderStrategy {
       bgfx::makeRef(indices.data(), uint32_t(indices.size() * sizeof(uint16_t)))
     );
 
+
+
   }
 
   void update(float dt) override {
     // Optional: nothing for now
   }
 
-  void draw() const override {
-    size_t idx = ctx->idx;
-    const bx::Vec3& pos = ctx->positions[idx];
+  void draw(float time) const override {
+    // size_t idx = ctx->idx;
+    // const bx::Vec3& pos = ctx->positions[idx];
 
-    bx::Vec3 c = ctx->neuron.spiked ?
-      bx::Vec3{ 1, 1, 0 } :
-      bx::Vec3{ ctx->neuron.v, 0, 1 - ctx->neuron.v };
+    // bx::Vec3 c = ctx->neuron.spiked ?
+    //   bx::Vec3{ 1, 1, 0 } :
+    //   bx::Vec3{ ctx->neuron.v, 0, 1 - ctx->neuron.v };
     // draw_sphere(pos, 0.2f, c);
   }
 
-  void cleanup() {
+  void destroy() override {
+
     bgfx::destroy(m_ibh);
     bgfx::destroy(m_vbh);
   }

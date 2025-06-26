@@ -13,7 +13,11 @@
 #include "logo.h"
 #include "imgui/bgfx_imgui.h"
 
+#include "neuron.hpp"
 #include "network.hpp"
+#include "render/neuron_render.hpp"
+#include "render/network_render.hpp"
+
 
 namespace
 {
@@ -57,19 +61,18 @@ namespace
 			: entry::AppI("NEUF", "spiking network simulator", "")
 		{
 			net.setSize(n_neurons);
-			auto ctx = std::make_shared<NetworkVisualContext>();
-		  ctx->net = net;
-
+			auto ctx = std::make_shared<NetworkVisualContext>(net);
+		  
 			const float offset = 3.0f;
 		  for (size_t i = 0; i < net.neurons.size(); ++i) {
 		      float angle = i * 2 * bx::kPi / net.neurons.size();
-					auto ctx2 = std::make_shared<NeuronVisualContext>();
+					auto ctx2 = std::make_shared<NeuronVisualContext>(net.neurons[i]);
 		      ctx2->positions.emplace_back(
 						cos(angle)*offset,
 						sin(angle)*offset, 
 						0.0f);
 		  		auto render_strategy = std::make_shared<NeuronRenderStrategy>(ctx2);
-					net.neurons[i].strategy = render_strategy;
+					net.neurons[i].render = render_strategy;
 		  }
 
 		}
@@ -82,9 +85,6 @@ namespace
 			m_height = _height;
 			m_debug = BGFX_DEBUG_TEXT;
 			m_reset = BGFX_RESET_VSYNC;
-			m_useInstancing = true;
-			m_lastFrameMissing = 0;
-			m_sideSize = 10;
 
 			bgfx::Init init;
 			init.type = args.m_type;
@@ -108,14 +108,7 @@ namespace
 				, 0
 			);
 
-
-			// Create vertex stream declaration.
-			PosColorVertex::init();
-
-			
-			// Create program from shaders.
-			m_program = loadProgram("vs_instancing", "fs_instancing");
-			m_program_non_instanced = loadProgram("vs_cubes", "fs_cubes");
+			net.init();
 
 			m_timeOffset = bx::getHPCounter();
 
@@ -126,9 +119,7 @@ namespace
 		{
 			imguiDestroy();
 
-			// Cleanup.
-			bgfx::destroy(m_program);
-			bgfx::destroy(m_program_non_instanced);
+			net.destroy();
 
 			// Shutdown bgfx.
 			bgfx::shutdown();
@@ -170,12 +161,11 @@ namespace
 
 				// Check if instancing is supported.
 				const bool instancingSupported = 0 != (BGFX_CAPS_INSTANCING & caps->supported);
-				m_useInstancing &= instancingSupported;
 
 				ImGui::Text("%d draw calls", bgfx::getStats()->numDraw);
 
 				ImGui::PushEnabled(instancingSupported);
-				ImGui::Checkbox("Use Instancing", &m_useInstancing);
+				// ImGui::Checkbox("Use Instancing", &m_useInstancing);
 				ImGui::PopEnabled();
 
 				ImGui::Text("Grid Side Size:");
@@ -211,7 +201,6 @@ namespace
 					bool blink = uint32_t(time * 3.0f) & 1;
 					bgfx::dbgTextPrintf(0, 0, blink ? 0x4f : 0x04, " Instancing is not supported by GPU. ");
 
-					m_useInstancing = false;
 				}
 
 				const bx::Vec3 at = { 0.0f, 0.0f,   0.0f };
@@ -232,71 +221,9 @@ namespace
 
 				m_lastFrameMissing = 0;
 				
-				net.draw();
+				net.update(time);
+				net.draw(time);
 				
-
-				// 80 bytes stride = 64 bytes for 4x4 matrix + 16 bytes for RGBA color.
-				const uint16_t instanceStride = 80;
-				// to total number of instances to draw
-				uint32_t totalCubes = m_sideSize * m_sideSize;
-
-				// figure out how big of a buffer is available
-				uint32_t drawnCubes = bgfx::getAvailInstanceDataBuffer(totalCubes, instanceStride);
-
-				// save how many we couldn't draw due to buffer room so we can display it
-				m_lastFrameMissing = totalCubes - drawnCubes;
-
-				bgfx::InstanceDataBuffer idb;
-				bgfx::allocInstanceDataBuffer(&idb, drawnCubes, instanceStride);
-
-				uint8_t* data = idb.data;
-
-				for (uint32_t ii = 0; ii < drawnCubes; ++ii)
-				{
-					uint32_t yy = ii / m_sideSize;
-					uint32_t xx = ii % m_sideSize;
-
-					float* mtx = (float*)data;
-					bx::mtxRotateXY(mtx, time + xx * 0.21f, time + yy * 0.37f);
-
-					// in column-major 4×4 transformation matrix the translation vector
-					// | ... ... ... tx |
-					// | ... ... ... ty |
-					// | ... ... ... tz |
-					// | ... ... ...  1 |
-					// indices
-					// |  0   4   8  12 |
-					// |  1   5   9  13 |
-					// |  2   6  10  14 |
-					// |  3   7  11  15 |
-
-					mtx[12] = -15.0f + float(xx) * 3.0f;
-					mtx[13] = -15.0f + float(yy) * 3.0f;
-					mtx[14] = 0.0f;
-
-					float* color = (float*)&data[64];
-					color[0] = bx::sin(time + float(xx) / 11.0f) * 0.5f + 0.5f;
-					color[1] = bx::cos(time + float(yy) / 11.0f) * 0.5f + 0.5f;
-					color[2] = bx::sin(time * 3.0f) * 0.5f + 0.5f;
-					color[3] = 1.0f;
-
-					data += instanceStride;
-				}
-
-
-				// Set vertex and index buffer.
-				bgfx::setVertexBuffer(0, m_vbh);
-				bgfx::setIndexBuffer(m_ibh);
-
-				// Set instance data buffer.
-				bgfx::setInstanceDataBuffer(&idb);
-
-				// Set render states.
-				bgfx::setState(BGFX_STATE_DEFAULT);
-
-				// Submit primitive for rendering to view 0.
-				bgfx::submit(0, m_program);
-
 				// Advance to next frame. Rendering thread will be kicked to
 				// process submitted rendering primitives.
 				bgfx::frame();
@@ -314,13 +241,10 @@ namespace
 		uint32_t m_height;
 		uint32_t m_debug;
 		uint32_t m_reset;
-		bool     m_useInstancing;
 		uint32_t m_lastFrameMissing;
 		uint32_t m_sideSize;
 
-		bgfx::ProgramHandle m_program;
-		bgfx::ProgramHandle m_program_non_instanced;
-
+		
 		int64_t m_timeOffset;
 	};
 

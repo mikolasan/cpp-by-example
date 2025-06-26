@@ -64,8 +64,8 @@ struct Network {
         if (render) render->init();
     }
 
-    void draw() const {
-        if (render) render->draw();
+    void draw(float time) const {
+        if (render) render->draw(time);
     }
 
     // void draw() const {
@@ -74,7 +74,11 @@ struct Network {
     //     }
     // }
 
-    void update(float input, float dt, float t) {
+    void update(float dt) {
         if (render) render->update(dt);
+    }
+
+    void destroy() const {
+        if (render) render->destroy();
     }
 };

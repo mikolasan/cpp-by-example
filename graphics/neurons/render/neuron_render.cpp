@@ -1,13 +1,16 @@
-#include <vector>
-
 #include "neuron_render.hpp"
+
+bgfx::VertexLayout PosColorVertex::ms_layout;
+
+bgfx::VertexBufferHandle NeuronRenderStrategy::m_vbh;
+bgfx::IndexBufferHandle NeuronRenderStrategy::m_ibh;
 
 void NeuronRenderStrategy::generateSphereMesh(
 		std::vector<PosColorVertex>& vertices,
 		std::vector<uint16_t>& indices,
-		int stacks = 3, // vertical segments (horizontal lines make stack of pancakes)
-		int slices = 5, // horizontal segments (vertical lines make slices like with apples or oranges)
-		float radius = 1.0f)
+		int stacks, // vertical segments (horizontal lines make stack of pancakes)
+		int slices, // horizontal segments (vertical lines make slices like with apples or oranges)
+		float radius)
 	{
 		vertices.clear();
 		vertices.reserve((stacks + 1) * (slices + 1));
