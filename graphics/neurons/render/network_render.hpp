@@ -34,9 +34,9 @@ struct NetworkRenderStrategy : RenderStrategy {
         // {
         //     /* code */
         // }
-        
+
         NeuronRenderStrategy::init_once();
-        
+
     }
 
     void update(float dt) override {
@@ -51,7 +51,7 @@ struct NetworkRenderStrategy : RenderStrategy {
     }
 
     void draw(float time) const override {
-        
+
         bgfx::InstanceDataBuffer idb;
         bgfx::allocInstanceDataBuffer(&idb, drawnCubes, instanceStride);
 
@@ -109,8 +109,8 @@ struct NetworkRenderStrategy : RenderStrategy {
         bgfx::destroy(m_program);
     }
 
-uint16_t instanceStride;
-uint32_t drawnCubes;
+    uint16_t instanceStride;
+    uint32_t drawnCubes;
     uint32_t m_lastFrameMissing;
     uint32_t m_sideSize;
 

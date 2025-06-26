@@ -62,6 +62,7 @@ namespace
 		{
 			net.setSize(n_neurons);
 			auto ctx = std::make_shared<NetworkVisualContext>(net);
+			net.render = std::make_shared<NetworkRenderStrategy>(ctx);
 		  
 			const float offset = 3.0f;
 		  for (size_t i = 0; i < net.neurons.size(); ++i) {
@@ -71,8 +72,7 @@ namespace
 						cos(angle)*offset,
 						sin(angle)*offset, 
 						0.0f);
-		  		auto render_strategy = std::make_shared<NeuronRenderStrategy>(ctx2);
-					net.neurons[i].render = render_strategy;
+					net.neurons[i].render = std::make_shared<NeuronRenderStrategy>(ctx2);
 		  }
 
 		}
