@@ -51,9 +51,9 @@ struct NeuronRenderStrategy : RenderStrategy {
   static void generateSphereMesh(
     std::vector<PosColorVertex>& vertices,
     std::vector<uint16_t>& indices,
-    int stacks = 3, // vertical segments (horizontal lines make stack of pancakes)
-    int slices = 5, // horizontal segments (vertical lines make slices like with apples or oranges)
-    float radius = 1.0f);
+    int stacks = 2, // vertical segments (horizontal lines make stack of pancakes)
+    int slices = 6, // horizontal segments (vertical lines make slices like with apples or oranges)
+    float radius = 0.9f);
 
   void init() override {
     std::cerr << "call 'init_once' instead" << std::endl;
@@ -64,34 +64,34 @@ struct NeuronRenderStrategy : RenderStrategy {
     PosColorVertex::init();
 
 
-    std::vector<PosColorVertex> vertices;
-    std::vector<uint16_t> indices;
-    generateSphereMesh(vertices, indices);
+    // std::vector<PosColorVertex> vertices;
+    // std::vector<uint16_t> indices;
+    // generateSphereMesh(vertices, indices);
 
-    std::cout << "vertices" << std::endl;
-    for (const auto& v : vertices) {
-      std::cout << "(" << v.m_x << ", "
-        << v.m_y << ", "
-        << v.m_z << ") ";
-    }
-    std::cout << std::endl;
+    // std::cout << "vertices" << std::endl;
+    // for (const auto& v : vertices) {
+    //   std::cout << "(" << v.m_x << ", "
+    //     << v.m_y << ", "
+    //     << v.m_z << ") ";
+    // }
+    // std::cout << std::endl;
 
-    std::cout << "indices" << std::endl;
-    for (const auto& i : indices) {
-      std::cout << i << " ";
-    }
-    std::cout << std::endl;
+    // std::cout << "indices" << std::endl;
+    // for (const auto& i : indices) {
+    //   std::cout << i << " ";
+    // }
+    // std::cout << std::endl;
 
-    // Create static vertex buffer.
-    m_vbh = bgfx::createVertexBuffer(
-      bgfx::makeRef(vertices.data(), uint32_t(vertices.size() * sizeof(PosColorVertex)))
-      , PosColorVertex::ms_layout
-    );
+    // // Create static vertex buffer.
+    // m_vbh = bgfx::createVertexBuffer(
+    //   bgfx::makeRef(vertices.data(), uint32_t(vertices.size() * sizeof(PosColorVertex)))
+    //   , PosColorVertex::ms_layout
+    // );
 
-    // Create static index buffer.
-    m_ibh = bgfx::createIndexBuffer(
-      bgfx::makeRef(indices.data(), uint32_t(indices.size() * sizeof(uint16_t)))
-    );
+    // // Create static index buffer.
+    // m_ibh = bgfx::createIndexBuffer(
+    //   bgfx::makeRef(indices.data(), uint32_t(indices.size() * sizeof(uint16_t)))
+    // );
 
 
 

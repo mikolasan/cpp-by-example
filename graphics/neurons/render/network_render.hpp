@@ -28,7 +28,6 @@ struct NetworkRenderStrategy : RenderStrategy {
         instanceStride = 80;
         m_sideSize = 10;
 
-        m_program = loadProgram("vs_instancing", "fs_instancing");
 
         // for (size_t i = 0; i < ctx->net.neurons.size(); i++)
         // {
@@ -36,6 +35,37 @@ struct NetworkRenderStrategy : RenderStrategy {
         // }
 
         NeuronRenderStrategy::init_once();
+
+        std::vector<PosColorVertex> vertices;
+        std::vector<uint16_t> indices;
+        NeuronRenderStrategy::generateSphereMesh(vertices, indices);
+
+        std::cout << "vertices" << std::endl;
+        for (const auto& v : vertices) {
+        std::cout << "(" << v.m_x << ", "
+            << v.m_y << ", "
+            << v.m_z << ") ";
+        }
+        std::cout << std::endl;
+
+        std::cout << "indices" << std::endl;
+        for (const auto& i : indices) {
+        std::cout << i << " ";
+        }
+        std::cout << std::endl;
+
+        // Create static vertex buffer.
+        m_vbh = bgfx::createVertexBuffer(
+        bgfx::makeRef(vertices.data(), uint32_t(vertices.size() * sizeof(PosColorVertex)))
+        , PosColorVertex::ms_layout
+        );
+
+        // Create static index buffer.
+        m_ibh = bgfx::createIndexBuffer(
+        bgfx::makeRef(indices.data(), uint32_t(indices.size() * sizeof(uint16_t)))
+        );
+
+        m_program = loadProgram("vs_instancing", "fs_instancing");
 
     }
 
@@ -62,6 +92,7 @@ struct NetworkRenderStrategy : RenderStrategy {
             uint32_t yy = ii / m_sideSize;
             uint32_t xx = ii % m_sideSize;
 
+            time = 0.0f;
             float* mtx = (float*)data;
             bx::mtxRotateXY(mtx, time + xx * 0.21f, time + yy * 0.37f);
 
@@ -91,8 +122,8 @@ struct NetworkRenderStrategy : RenderStrategy {
 
 
         // Set vertex and index buffer.
-        bgfx::setVertexBuffer(0, NeuronRenderStrategy::m_vbh);
-        bgfx::setIndexBuffer(NeuronRenderStrategy::m_ibh);
+        bgfx::setVertexBuffer(0, m_vbh);
+        bgfx::setIndexBuffer(m_ibh);
 
         // Set instance data buffer.
         bgfx::setInstanceDataBuffer(&idb);
@@ -108,6 +139,9 @@ struct NetworkRenderStrategy : RenderStrategy {
     void destroy() override {
         bgfx::destroy(m_program);
     }
+
+    bgfx::VertexBufferHandle m_vbh;
+    bgfx::IndexBufferHandle  m_ibh;
 
     uint16_t instanceStride;
     uint32_t drawnCubes;

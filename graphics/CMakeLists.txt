@@ -115,5 +115,8 @@ target_link_libraries(neurons_gui
     OpenGL::GL 
     ${SDL2_LIBRARIES} 
     dirent
-    bgfxRelease bimgRelease bimg_decodeRelease bxRelease
+    bgfx${CMAKE_BUILD_TYPE}
+    bimg${CMAKE_BUILD_TYPE}
+    bimg_decode${CMAKE_BUILD_TYPE}
+    bx${CMAKE_BUILD_TYPE}
 )

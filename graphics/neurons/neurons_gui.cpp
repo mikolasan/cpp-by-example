@@ -24,17 +24,33 @@ namespace
 
 	// // cube
 
-	// static PosColorVertex s_cubeVertices[8] =
-	// {
-	// 	{-1.0f,  1.0f,  1.0f, 0xff000000 },
-	// 	{ 1.0f,  1.0f,  1.0f, 0xff0000ff },
-	// 	{-1.0f, -1.0f,  1.0f, 0xff00ff00 },
-	// 	{ 1.0f, -1.0f,  1.0f, 0xff00ffff },
-	// 	{-1.0f,  1.0f, -1.0f, 0xffff0000 },
-	// 	{ 1.0f,  1.0f, -1.0f, 0xffff00ff },
-	// 	{-1.0f, -1.0f, -1.0f, 0xffffff00 },
-	// 	{ 1.0f, -1.0f, -1.0f, 0xffffffff },
-	// };
+	static PosColorVertex s_cubeVertices[8] =
+	{
+		{-1.0f,  1.0f,  1.0f, 0xff000000 },
+		{ 1.0f,  1.0f,  1.0f, 0xff0000ff },
+		{-1.0f, -1.0f,  1.0f, 0xff00ff00 },
+		{ 1.0f, -1.0f,  1.0f, 0xff00ffff },
+		{-1.0f,  1.0f, -1.0f, 0xffff0000 },
+		{ 1.0f,  1.0f, -1.0f, 0xffff00ff },
+		{-1.0f, -1.0f, -1.0f, 0xffffff00 },
+		{ 1.0f, -1.0f, -1.0f, 0xffffffff },
+	};
+
+	static const uint16_t s_cubeTriList[] =
+	{
+		0, 1, 2, // 0
+		1, 3, 2,
+		4, 6, 5, // 2
+		5, 6, 7,
+		0, 2, 4, // 4
+		4, 2, 6,
+		1, 5, 3, // 6
+		5, 7, 3,
+		0, 4, 1, // 8
+		4, 5, 1,
+		2, 3, 6, // 10
+		6, 3, 7,
+	};
 
 	// static const uint16_t s_cubeIndices[36] =
 	// {
@@ -110,6 +126,19 @@ namespace
 
 			net.init();
 
+			m_vbh = bgfx::createVertexBuffer(
+			// Static data can be passed with bgfx::makeRef
+			  bgfx::makeRef(s_cubeVertices, sizeof(s_cubeVertices) )
+			, PosColorVertex::ms_layout
+			);
+
+			// Create static index buffer for triangle list rendering.
+			m_ibh = bgfx::createIndexBuffer(
+				// Static data can be passed with bgfx::makeRef
+				bgfx::makeRef(s_cubeTriList, sizeof(s_cubeTriList) )
+				);
+
+			m_program = loadProgram("vs_cubes", "fs_cubes");
 			m_timeOffset = bx::getHPCounter();
 
 			imguiCreate();
@@ -168,8 +197,8 @@ namespace
 				// ImGui::Checkbox("Use Instancing", &m_useInstancing);
 				ImGui::PopEnabled();
 
-				ImGui::Text("Grid Side Size:");
-				ImGui::SliderInt("##size", (int*)&m_sideSize, 1, 512);
+				// ImGui::Text("Grid Side Size:");
+				// ImGui::SliderInt("##size", (int*)&m_sideSize, 1, 512);
 
 				if (m_lastFrameMissing > 0)
 				{
@@ -194,14 +223,14 @@ namespace
 
 				float time = (float)((bx::getHPCounter() - m_timeOffset) / double(bx::getHPFrequency()));
 
-				if (!instancingSupported)
-				{
-					// When instancing is not supported by GPU, implement alternative
-					// code path that doesn't use instancing.
-					bool blink = uint32_t(time * 3.0f) & 1;
-					bgfx::dbgTextPrintf(0, 0, blink ? 0x4f : 0x04, " Instancing is not supported by GPU. ");
+				// if (!instancingSupported)
+				// {
+				// 	// When instancing is not supported by GPU, implement alternative
+				// 	// code path that doesn't use instancing.
+				// 	bool blink = uint32_t(time * 3.0f) & 1;
+				// 	bgfx::dbgTextPrintf(0, 0, blink ? 0x4f : 0x04, " Instancing is not supported by GPU. ");
 
-				}
+				// }
 
 				const bx::Vec3 at = { 0.0f, 0.0f,   0.0f };
 				const bx::Vec3 eye = { 0.0f, 0.0f, -35.0f };
@@ -223,7 +252,21 @@ namespace
 				
 				net.update(time);
 				net.draw(time);
-				
+
+				float mtx[16];
+				bx::mtxRotateXY(mtx, 0.0f, 0.0f);
+				mtx[12] = -15.0f;
+				mtx[13] = -15.0f;
+				mtx[14] = 0.0f;
+
+				// Set model matrix for rendering.
+				bgfx::setTransform(mtx);
+
+				// Set vertex and index buffer.
+				bgfx::setVertexBuffer(0, m_vbh);
+				bgfx::setIndexBuffer(m_ibh);
+
+				bgfx::submit(0, m_program);
 				// Advance to next frame. Rendering thread will be kicked to
 				// process submitted rendering primitives.
 				bgfx::frame();
@@ -242,8 +285,11 @@ namespace
 		uint32_t m_debug;
 		uint32_t m_reset;
 		uint32_t m_lastFrameMissing;
-		uint32_t m_sideSize;
+		
 
+		bgfx::VertexBufferHandle m_vbh;
+		bgfx::IndexBufferHandle m_ibh;
+		bgfx::ProgramHandle m_program;
 		
 		int64_t m_timeOffset;
 	};
