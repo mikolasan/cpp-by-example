@@ -22,54 +22,6 @@
 namespace
 {
 
-	// // cube
-
-	static PosColorVertex s_cubeVertices[8] =
-	{
-		{-1.0f,  1.0f,  1.0f, 0xff000000 },
-		{ 1.0f,  1.0f,  1.0f, 0xff0000ff },
-		{-1.0f, -1.0f,  1.0f, 0xff00ff00 },
-		{ 1.0f, -1.0f,  1.0f, 0xff00ffff },
-		{-1.0f,  1.0f, -1.0f, 0xffff0000 },
-		{ 1.0f,  1.0f, -1.0f, 0xffff00ff },
-		{-1.0f, -1.0f, -1.0f, 0xffffff00 },
-		{ 1.0f, -1.0f, -1.0f, 0xffffffff },
-	};
-
-	static const uint16_t s_cubeTriList[] =
-	{
-		0, 1, 2, // 0
-		1, 3, 2,
-		4, 6, 5, // 2
-		5, 6, 7,
-		0, 2, 4, // 4
-		4, 2, 6,
-		1, 5, 3, // 6
-		5, 7, 3,
-		0, 4, 1, // 8
-		4, 5, 1,
-		2, 3, 6, // 10
-		6, 3, 7,
-	};
-
-	// static const uint16_t s_cubeIndices[36] =
-	// {
-	// 	0, 1, 2, // 0
-	// 	1, 3, 2,
-	// 	4, 6, 5, // 2
-	// 	5, 6, 7,
-	// 	0, 2, 4, // 4
-	// 	4, 2, 6,
-	// 	1, 5, 3, // 6
-	// 	5, 7, 3,
-	// 	0, 4, 1, // 8
-	// 	4, 5, 1,
-	// 	2, 3, 6, // 10
-	// 	6, 3, 7,
-	// };
-
-	// sphere
-	
 	class ExampleHelloWorld : public entry::AppI
 	{
 	public:
@@ -125,20 +77,8 @@ namespace
 			);
 
 			net.init();
+			
 
-			m_vbh = bgfx::createVertexBuffer(
-			// Static data can be passed with bgfx::makeRef
-			  bgfx::makeRef(s_cubeVertices, sizeof(s_cubeVertices) )
-			, PosColorVertex::ms_layout
-			);
-
-			// Create static index buffer for triangle list rendering.
-			m_ibh = bgfx::createIndexBuffer(
-				// Static data can be passed with bgfx::makeRef
-				bgfx::makeRef(s_cubeTriList, sizeof(s_cubeTriList) )
-				);
-
-			m_program = loadProgram("vs_cubes", "fs_cubes");
 			m_timeOffset = bx::getHPCounter();
 
 			imguiCreate();
@@ -250,23 +190,11 @@ namespace
 
 				m_lastFrameMissing = 0;
 				
+				net.neurons[0].v += 1.5f;  // inject current to neuron 0
+        net.step();
 				net.update(time);
 				net.draw(time);
 
-				float mtx[16];
-				bx::mtxRotateXY(mtx, 0.0f, 0.0f);
-				mtx[12] = -15.0f;
-				mtx[13] = -15.0f;
-				mtx[14] = 0.0f;
-
-				// Set model matrix for rendering.
-				bgfx::setTransform(mtx);
-
-				// Set vertex and index buffer.
-				bgfx::setVertexBuffer(0, m_vbh);
-				bgfx::setIndexBuffer(m_ibh);
-
-				bgfx::submit(0, m_program);
 				// Advance to next frame. Rendering thread will be kicked to
 				// process submitted rendering primitives.
 				bgfx::frame();

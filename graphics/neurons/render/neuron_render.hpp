@@ -59,43 +59,7 @@ struct NeuronRenderStrategy : RenderStrategy {
     std::cerr << "call 'init_once' instead" << std::endl;
   }
 
-  static void init_once() {
-  
-    PosColorVertex::init();
-
-
-    // std::vector<PosColorVertex> vertices;
-    // std::vector<uint16_t> indices;
-    // generateSphereMesh(vertices, indices);
-
-    // std::cout << "vertices" << std::endl;
-    // for (const auto& v : vertices) {
-    //   std::cout << "(" << v.m_x << ", "
-    //     << v.m_y << ", "
-    //     << v.m_z << ") ";
-    // }
-    // std::cout << std::endl;
-
-    // std::cout << "indices" << std::endl;
-    // for (const auto& i : indices) {
-    //   std::cout << i << " ";
-    // }
-    // std::cout << std::endl;
-
-    // // Create static vertex buffer.
-    // m_vbh = bgfx::createVertexBuffer(
-    //   bgfx::makeRef(vertices.data(), uint32_t(vertices.size() * sizeof(PosColorVertex)))
-    //   , PosColorVertex::ms_layout
-    // );
-
-    // // Create static index buffer.
-    // m_ibh = bgfx::createIndexBuffer(
-    //   bgfx::makeRef(indices.data(), uint32_t(indices.size() * sizeof(uint16_t)))
-    // );
-
-
-
-  }
+  static void init_once();
 
   void update(float dt) override {
     // Optional: nothing for now

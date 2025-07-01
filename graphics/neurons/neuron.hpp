@@ -21,7 +21,7 @@ struct Neuron {
     }
 
     void simulate(float input, float dt) {
-        v += dt * (-v + input) / 20.0f;
+        v += dt * (-v + input) / tau;
         spiked = (v > 1.0f);
         if (render) render->update(dt);
     }

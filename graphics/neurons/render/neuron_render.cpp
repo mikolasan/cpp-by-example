@@ -5,6 +5,89 @@ bgfx::VertexLayout PosColorVertex::ms_layout;
 bgfx::VertexBufferHandle NeuronRenderStrategy::m_vbh;
 bgfx::IndexBufferHandle NeuronRenderStrategy::m_ibh;
 
+namespace
+{
+
+	// // cube
+
+	PosColorVertex s_cubeVertices[8] =
+	{
+		{-1.0f,  1.0f,  1.0f, 0xff000000 },
+		{ 1.0f,  1.0f,  1.0f, 0xff0000ff },
+		{-1.0f, -1.0f,  1.0f, 0xff00ff00 },
+		{ 1.0f, -1.0f,  1.0f, 0xff00ffff },
+		{-1.0f,  1.0f, -1.0f, 0xffff0000 },
+		{ 1.0f,  1.0f, -1.0f, 0xffff00ff },
+		{-1.0f, -1.0f, -1.0f, 0xffffff00 },
+		{ 1.0f, -1.0f, -1.0f, 0xffffffff },
+	};
+
+	const uint16_t s_cubeTriList[] =
+	{
+		0, 1, 2, // 0
+		1, 3, 2,
+		4, 6, 5, // 2
+		5, 6, 7,
+		0, 2, 4, // 4
+		4, 2, 6,
+		1, 5, 3, // 6
+		5, 7, 3,
+		0, 4, 1, // 8
+		4, 5, 1,
+		2, 3, 6, // 10
+		6, 3, 7,
+	};
+
+}
+
+void NeuronRenderStrategy::init_once() {
+	
+    PosColorVertex::init();
+
+
+    // std::vector<PosColorVertex> vertices;
+    // std::vector<uint16_t> indices;
+    // generateSphereMesh(vertices, indices);
+
+    // std::cout << "vertices" << std::endl;
+    // for (const auto& v : vertices) {
+    //   std::cout << "(" << v.m_x << ", "
+    //     << v.m_y << ", "
+    //     << v.m_z << ") ";
+    // }
+    // std::cout << std::endl;
+
+    // std::cout << "indices" << std::endl;
+    // for (const auto& i : indices) {
+    //   std::cout << i << " ";
+    // }
+    // std::cout << std::endl;
+
+    // // Create static vertex buffer.
+    // m_vbh = bgfx::createVertexBuffer(
+    //   bgfx::makeRef(vertices.data(), uint32_t(vertices.size() * sizeof(PosColorVertex)))
+    //   , PosColorVertex::ms_layout
+    // );
+
+    // // Create static index buffer.
+    // m_ibh = bgfx::createIndexBuffer(
+    //   bgfx::makeRef(indices.data(), uint32_t(indices.size() * sizeof(uint16_t)))
+    // );
+
+		m_vbh = bgfx::createVertexBuffer(
+		// Static data can be passed with bgfx::makeRef
+			bgfx::makeRef(s_cubeVertices, sizeof(s_cubeVertices) )
+		, PosColorVertex::ms_layout
+		);
+
+		// Create static index buffer for triangle list rendering.
+		m_ibh = bgfx::createIndexBuffer(
+			// Static data can be passed with bgfx::makeRef
+			bgfx::makeRef(s_cubeTriList, sizeof(s_cubeTriList) )
+			);
+
+}
+
 void NeuronRenderStrategy::generateSphereMesh(
 		std::vector<PosColorVertex>& vertices,
 		std::vector<uint16_t>& indices,
