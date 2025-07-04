@@ -12,6 +12,27 @@ else()
     message(FATAL_ERROR "OpenGL not found!")
 endif()
 
+
+# html
+
+add_executable(simple_html WIN32
+    thirdparty/imgui/imgui.cpp
+    thirdparty/imgui/imgui_widgets.cpp
+    thirdparty/imgui/imgui_tables.cpp
+    thirdparty/imgui/imgui_draw.cpp
+    thirdparty/imgui/backends/imgui_impl_opengl3.cpp
+    thirdparty/imgui/backends/imgui_impl_sdl2.cpp
+    html/html_parser.cpp
+    html/html_renderer.cpp
+    html/app.cpp
+    html/main.cpp
+)
+
+target_include_directories(simple_html 
+    PRIVATE thirdparty/imgui thirdparty/imgui/backends
+)
+target_link_libraries(simple_html OpenGL::GL ${SDL2_LIBRARIES})
+
 # nodes
 
 add_executable(nodes_example
@@ -41,11 +62,6 @@ if (MSVC)
     # bx requirements
     add_compile_options(/Zc:__cplusplus /Zc:preprocessor)
 endif ()
-
-add_compile_definitions(BX_CONFIG_DEBUG=0)
-add_compile_definitions(ENTRY_CONFIG_USE_SDL=1)
-add_compile_definitions(IMGUI_INCLUDE_IMGUI_USER_H)
-add_compile_definitions(IMGUI_INCLUDE_IMGUI_USER_INL)
 
 add_executable(neurons_cli
     neurons/network.hpp
@@ -90,6 +106,11 @@ add_executable(neurons_gui
     neurons/render/network_render.hpp
     neurons/neurons_gui.cpp
 )
+
+target_compile_definitions(neurons_gui PRIVATE BX_CONFIG_DEBUG=0)
+target_compile_definitions(neurons_gui PRIVATE ENTRY_CONFIG_USE_SDL=1)
+target_compile_definitions(neurons_gui PRIVATE IMGUI_INCLUDE_IMGUI_USER_H)
+target_compile_definitions(neurons_gui PRIVATE IMGUI_INCLUDE_IMGUI_USER_INL)
 
 target_include_directories(neurons_gui PRIVATE 
     thirdparty 
