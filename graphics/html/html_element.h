@@ -18,7 +18,8 @@ enum class ElementType {
     LABEL,
     BUTTON,
     ANCHOR,
-    TEXT
+    TEXT,
+    UNKNOWN
 };
 
 // HTML Element structure
