@@ -11,3 +11,4 @@ add_library(project_options INTERFACE)
 target_compile_options(project_options INTERFACE -O3 -ffast-math -fomit-frame-pointer -fPIC)
 target_link_libraries(save_number PRIVATE project_options)
 
+add_executable(mnist_encode mnist_encode.cpp)
