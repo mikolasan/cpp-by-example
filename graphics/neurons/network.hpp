@@ -29,6 +29,9 @@ struct Network {
     }
 
     void step() {
+
+        neurons[0].v += 1.5f * 0.04f;  // inject current to neuron 0
+
         std::vector<float> inputs(neurons.size(), 0.0f);
 
         // Synaptic input

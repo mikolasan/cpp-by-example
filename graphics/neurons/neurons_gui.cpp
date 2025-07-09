@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #include <bx/uint32_t.h>
 #include <bx/timer.h>
@@ -22,6 +23,38 @@
 namespace
 {
 
+	struct MnistImage {
+		uint8_t label;
+		uint8_t pixels[784];
+	};
+
+	std::vector<MnistImage> load_mnist_bin(const std::string& path) {
+		std::ifstream in(path, std::ios::binary);
+		std::vector<MnistImage> images;
+		MnistImage img;
+
+		while (in.read(reinterpret_cast<char*>(&img), sizeof(MnistImage))) {
+			images.push_back(img);
+		}
+		return images;
+	}
+
+	bgfx::TextureHandle create_mnist_texture(const uint8_t* pixels) {
+		const uint32_t width = 28, height = 28;
+		std::vector<uint8_t> rgba(width * height * 4);
+
+		for (int i = 0; i < 784; ++i) {
+			uint8_t v = pixels[i];
+			rgba[i * 4 + 0] = v;
+			rgba[i * 4 + 1] = v;
+			rgba[i * 4 + 2] = v;
+			rgba[i * 4 + 3] = 255;
+		}
+
+		const bgfx::Memory* mem = bgfx::copy(rgba.data(), rgba.size());
+		return bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, 0, mem);
+	}
+
 	class ExampleHelloWorld : public entry::AppI
 	{
 	public:
@@ -31,23 +64,25 @@ namespace
 			net.setSize(n_neurons);
 			auto ctx = std::make_shared<NetworkVisualContext>(net);
 			net.render = std::make_shared<NetworkRenderStrategy>(ctx);
-		  
+
 			const float offset = 3.0f;
-		  for (size_t i = 0; i < net.neurons.size(); ++i) {
-		      float angle = i * 2 * bx::kPi / net.neurons.size();
-					auto ctx2 = std::make_shared<NeuronVisualContext>(net.neurons[i]);
-		      ctx2->positions.emplace_back(
-						cos(angle)*offset,
-						sin(angle)*offset, 
-						0.0f);
-					net.neurons[i].render = std::make_shared<NeuronRenderStrategy>(ctx2);
-		  }
+			for (size_t i = 0; i < net.neurons.size(); ++i) {
+				float angle = i * 2 * bx::kPi / net.neurons.size();
+				auto ctx2 = std::make_shared<NeuronVisualContext>(net.neurons[i]);
+				ctx2->positions.emplace_back(
+					cos(angle) * offset,
+					sin(angle) * offset,
+					0.0f);
+				net.neurons[i].render = std::make_shared<NeuronRenderStrategy>(ctx2);
+			}
 
 		}
 
 		void init(int32_t _argc, const char* const* _argv, uint32_t _width, uint32_t _height) override
 		{
 			Args args(_argc, _argv);
+
+			images = load_mnist_bin("mnist.bin");
 
 			m_width = _width;
 			m_height = _height;
@@ -77,7 +112,7 @@ namespace
 			);
 
 			net.init();
-			
+
 
 			m_timeOffset = bx::getHPCounter();
 
@@ -125,13 +160,33 @@ namespace
 					, 0
 				);
 
+				static int current_image = 0;
+				ImGui::SliderInt("Image Index", &current_image, 0, images.size() - 1);
+				ImGui::Text("Label: %d", images[current_image].label);
+
+				// Create/update texture
+				static bgfx::TextureHandle texture = BGFX_INVALID_HANDLE;
+				if (!bgfx::isValid(texture)) {
+					texture = create_mnist_texture(images[current_image].pixels);
+				}
+				else {
+					bgfx::destroy(texture);
+					texture = create_mnist_texture(images[current_image].pixels);
+				}
+
+				// Show image
+				ImTextureID tex_id = (ImTextureID)(uintptr_t)texture.idx;
+				ImGui::Image(tex_id, ImVec2(280, 280));
+
 				// Get renderer capabilities info.
 				const bgfx::Caps* caps = bgfx::getCaps();
 
 				// Check if instancing is supported.
 				const bool instancingSupported = 0 != (BGFX_CAPS_INSTANCING & caps->supported);
 
-				ImGui::Text("%d draw calls", bgfx::getStats()->numDraw);
+				float time = (float)((bx::getHPCounter() - m_timeOffset) / double(bx::getHPFrequency()));
+
+				ImGui::Text("Time %.2f", time);
 
 				ImGui::PushEnabled(instancingSupported);
 				// ImGui::Checkbox("Use Instancing", &m_useInstancing);
@@ -161,7 +216,7 @@ namespace
 				// if no other draw calls are submitted to view 0.
 				bgfx::touch(0);
 
-				float time = (float)((bx::getHPCounter() - m_timeOffset) / double(bx::getHPFrequency()));
+
 
 				// if (!instancingSupported)
 				// {
@@ -189,9 +244,8 @@ namespace
 				}
 
 				m_lastFrameMissing = 0;
-				
-				net.neurons[0].v += 1.5f;  // inject current to neuron 0
-        net.step();
+
+				net.step();
 				net.update(time);
 				net.draw(time);
 
@@ -205,6 +259,8 @@ namespace
 			return false;
 		}
 
+		std::vector<MnistImage> images;
+
 		Network net;
 		entry::MouseState m_mouseState;
 
@@ -213,12 +269,12 @@ namespace
 		uint32_t m_debug;
 		uint32_t m_reset;
 		uint32_t m_lastFrameMissing;
-		
+
 
 		bgfx::VertexBufferHandle m_vbh;
 		bgfx::IndexBufferHandle m_ibh;
 		bgfx::ProgramHandle m_program;
-		
+
 		int64_t m_timeOffset;
 	};
 
