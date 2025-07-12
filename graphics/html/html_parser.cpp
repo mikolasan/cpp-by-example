@@ -5,15 +5,66 @@
 
 #include "html_parser.h"
 
+// https://html.spec.whatwg.org/multipage/parsing.html#parsing
+
+static DataStateParser dataStateParser;
+static TagOpenStateParser tagOpenStateParser;
+
+void DataStateParser::parse(HTMLParser& parser) {
+    char ch;
+    parser.input_stream.get(ch);
+    switch (ch)
+    {
+    case '<':
+        parser.parser_state = ParserState::TagOpenState;
+        parser.current_parser = tagOpenStateParser;
+        break;
+    
+    default:
+        break;
+    }
+
+    parser.current_parser.parse(parser);
+}
+
+void TagOpenStateParser::parse(HTMLParser& parser) {
+    char ch;
+    parser.input_stream.get(ch);
+    switch (ch)
+    {
+    case '<':
+        parser.parser_state = ParserState::TagOpenState;
+        parser.current_parser = tagOpenStateParser;
+        break;
+    
+    default:
+        break;
+    }
+
+    parser.current_parser.parse(parser);
+}
+
 HTMLParser::HTMLParser(const std::string& htmlContent, bool enableDebug) :
+    input_stream(htmlContent),
+    parser_state(ParserState::DataState),
+    current_parser(dataStateParser),
     html(htmlContent), pos(0), depth(0), debug(enableDebug)
 {
 }
 
-HTMLElementPtr HTMLParser::parse() {
+DOM HTMLParser::parse() {
     debugLog("Starting parse...");
-    return parseElement();
+    dom.clear();
+
+    current_parser.parse(*this);
+    
+    return dom;
 }
+
+// HTMLElementPtr HTMLParser::parse() {
+//     debugLog("Starting parse...");
+//     return parseElement();
+// }
 
 HTMLElementPtr HTMLParser::parseElement() {
     depth++;
@@ -86,28 +137,28 @@ HTMLElementPtr HTMLParser::parseElement() {
     return element;
 }
 
-void HTMLParser::printTree(const HTMLElementPtr& element, int indentLevel) {
-    if (!element) return;
+void HTMLParser::printTree(const DOM& element, int indentLevel) {
+    // if (!element) return;
 
-    std::string indent(indentLevel * 2, ' ');
+    // std::string indent(indentLevel * 2, ' ');
 
-    if (element->type == ElementType::TEXT) {
-        std::cout << indent << "[TEXT] \"" << element->text << "\"" << std::endl;
-    }
-    else {
-        std::cout << indent << "[" << getElementTypeName(element->type) << "] ";
-        if (!element->tag.empty()) {
-            std::cout << "<" << element->tag << ">";
-        }
-        if (!element->href.empty()) {
-            std::cout << " href=\"" << element->href << "\"";
-        }
-        std::cout << std::endl;
+    // if (element->type == ElementType::TEXT) {
+    //     std::cout << indent << "[TEXT] \"" << element->text << "\"" << std::endl;
+    // }
+    // else {
+    //     std::cout << indent << "[" << getElementTypeName(element->type) << "] ";
+    //     if (!element->tag.empty()) {
+    //         std::cout << "<" << element->tag << ">";
+    //     }
+    //     if (!element->href.empty()) {
+    //         std::cout << " href=\"" << element->href << "\"";
+    //     }
+    //     std::cout << std::endl;
 
-        for (const auto& child : element->children) {
-            printTree(child, indentLevel + 1);
-        }
-    }
+    //     for (const auto& child : element->children) {
+    //         printTree(child, indentLevel + 1);
+    //     }
+    // }
 }
 
 void HTMLParser::skipWhitespace() {

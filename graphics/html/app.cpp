@@ -264,6 +264,7 @@ ImVec4 HTMLGUIApp::getStatusCodeColor(long statusCode) {
 size_t HTMLGUIApp::WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp) {
     size_t totalSize = size * nmemb;
     userp->append((char*)contents, totalSize);
+    std::cout << "WriteCallback " << totalSize << std::endl;
     return totalSize;
 }
 

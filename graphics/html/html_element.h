@@ -1,6 +1,7 @@
 #ifndef HTML_ELEMENT_H
 #define HTML_ELEMENT_H
 
+#include <list>
 #include <memory>
 #include <string>
 #include <vector>
@@ -9,6 +10,8 @@
 struct HTMLElement;
 
 using HTMLElementPtr = std::shared_ptr<HTMLElement>;
+
+using DOM = std::list<HTMLElement>;
 
 // HTML Element types
 enum class ElementType {

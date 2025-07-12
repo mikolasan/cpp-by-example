@@ -36,21 +36,21 @@ int main(int argc, char* argv[]) {
     std::cout << "Debug: " << (debug ? "ON" : "OFF") << std::endl;
     std::cout << std::endl;
     
-    if (debug) {
-        std::cout << "=== RAW HTML (first 500 chars) ===" << std::endl;
-        std::cout << htmlContent.substr(0, 500);
-        if (htmlContent.length() > 500) {
-            std::cout << "... (truncated)";
-        }
-        std::cout << std::endl << std::endl;
-    }
+    // if (debug) {
+    //     std::cout << "=== RAW HTML (first 500 chars) ===" << std::endl;
+    //     std::cout << htmlContent.substr(0, 500);
+    //     if (htmlContent.length() > 500) {
+    //         std::cout << "... (truncated)";
+    //     }
+    //     std::cout << std::endl << std::endl;
+    // }
     
     // Parse HTML
     HTMLParser parser(htmlContent, debug);
     auto root = parser.parse();
     
     std::cout << "=== PARSED TREE ===" << std::endl;
-    if (root) {
+    if (!root.empty()) {
         parser.printTree(root);
     } else {
         std::cout << "No elements parsed!" << std::endl;

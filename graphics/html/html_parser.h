@@ -3,18 +3,48 @@
 
 #include <algorithm>
 #include <memory>
+#include <sstream>
 #include <string>
 
 #include "html_element.h"
 
+class HTMLParser;
+
+enum class ParserState {
+    DataState,
+    TagOpenState,
+};
+
+class StateParser {
+public:
+    virtual void parse(HTMLParser& parser) = 0;
+};
+
+class DataStateParser : public StateParser {
+public:
+    void parse(HTMLParser& parser);
+};
+
+class TagOpenStateParser : public StateParser {
+public:
+    void parse(HTMLParser& parser);
+};
+
 // Simple HTML Parser
 class HTMLParser {
 private:
+    std::istringstream input_stream;
+    DOM dom;
+    ParserState parser_state;
+    StateParser& current_parser;
     std::string html;
     size_t pos;
     int depth;
     bool debug;
     
+    friend class DataStateParser;
+    friend class TagOpenStateParser;
+
     void skipWhitespace();
     void skipComment();
     void skipDoctype();
@@ -29,9 +59,10 @@ private:
 public:
     HTMLParser(const std::string& htmlContent, bool enableDebug = false);
     
-    HTMLElementPtr parse();
+    DOM parse();
+    // HTMLElementPtr parse();
     HTMLElementPtr parseElement();
-    void printTree(const HTMLElementPtr& element, int indentLevel = 0);
+    void printTree(const DOM& element, int indentLevel = 0);
 };
 
 #endif
