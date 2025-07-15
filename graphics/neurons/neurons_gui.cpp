@@ -19,6 +19,9 @@
 #include "render/neuron_render.hpp"
 #include "render/network_render.hpp"
 
+// TODO:
+// ImGui different look
+// https://github.com/GraphicsProgramming/dear-imgui-styles
 
 namespace
 {
@@ -61,18 +64,20 @@ namespace
 		ExampleHelloWorld(int n_neurons)
 			: entry::AppI("NEUF", "spiking network simulator", "")
 		{
-			net.setSize(n_neurons);
+			// TODO: data dimensions should come from MnistData
+			const uint32_t width = 28, height = 28;
+
+			net.setSize(width * height);
 			auto ctx = std::make_shared<NetworkVisualContext>(net);
 			net.render = std::make_shared<NetworkRenderStrategy>(ctx);
 
 			const float offset = 3.0f;
 			for (size_t i = 0; i < net.neurons.size(); ++i) {
-				float angle = i * 2 * bx::kPi / net.neurons.size();
 				auto ctx2 = std::make_shared<NeuronVisualContext>(net.neurons[i]);
-				ctx2->positions.emplace_back(
-					cos(angle) * offset,
-					sin(angle) * offset,
-					0.0f);
+				ctx2->position = {
+					float(i % width),
+					float(i / width),
+					0.0f};
 				net.neurons[i].render = std::make_shared<NeuronRenderStrategy>(ctx2);
 			}
 
@@ -245,7 +250,7 @@ namespace
 
 				m_lastFrameMissing = 0;
 
-				net.step();
+				net.step(images[current_image].pixels);
 				net.update(time);
 				net.draw(time);
 

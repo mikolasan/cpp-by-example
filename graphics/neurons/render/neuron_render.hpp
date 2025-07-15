@@ -33,10 +33,10 @@ struct PosColorVertex
 
 struct NeuronVisualContext : VisualContext {
   size_t idx;
-  std::vector<bx::Vec3> positions;
+  bx::Vec3 position;
   Neuron& neuron;
 
-  explicit NeuronVisualContext(Neuron& neuron) : neuron(neuron) {}
+  explicit NeuronVisualContext(Neuron& neuron) : position({0.0f, 0.0f, 0.0f}), neuron(neuron) {}
 };
 
 // TODO: many classes have one instance of subclass 
@@ -60,6 +60,10 @@ struct NeuronRenderStrategy : RenderStrategy {
   }
 
   static void init_once();
+
+  bx::Vec3 get_position() {
+    return ctx->position;
+  }
 
   void update(float dt) override {
     // Optional: nothing for now

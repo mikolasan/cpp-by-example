@@ -91,8 +91,10 @@ struct NetworkRenderStrategy : RenderStrategy {
         {
             const auto& neuron = ctx->net.neurons[ii];
 
-            uint32_t yy = ii / m_sideSize;
-            uint32_t xx = ii % m_sideSize;
+            std::shared_ptr<NeuronRenderStrategy>& s = std::dynamic_pointer_cast<NeuronRenderStrategy>(neuron.render);
+            bx::Vec3 pos = s->get_position();
+            uint32_t yy = pos.y;
+            uint32_t xx = pos.x;
 
             float* mtx = (float*)data;
             time = 0.0f;
