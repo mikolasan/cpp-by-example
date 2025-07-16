@@ -30,12 +30,12 @@ struct Network {
 
     void step(uint8_t input[784]) {
 
-        for (size_t i = 0; i < 784; i++)
-        {
-            if (input[i] > 0) {
-                neurons[i].v += 1.5f * (input[i] / 255.0f) * 0.2f;  // inject current to neuron 0
-            }
-        }
+        // for (size_t i = 0; i < 784; i++)
+        // {
+        //     if (input[i] > 0) {
+        //         neurons[i].v += 1.5f * (input[i] / 255.0f) * 0.2f;  // inject current to neuron 0
+        //     }
+        // }
         
         std::vector<float> inputs(neurons.size(), 0.0f);
 

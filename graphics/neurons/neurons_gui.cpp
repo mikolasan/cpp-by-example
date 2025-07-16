@@ -19,6 +19,10 @@
 #include "render/neuron_render.hpp"
 #include "render/network_render.hpp"
 
+#include "camera.cpp"
+#include "mouse.cpp"
+#include "settings.cpp"
+
 // TODO:
 // ImGui different look
 // https://github.com/GraphicsProgramming/dear-imgui-styles
@@ -65,7 +69,7 @@ namespace
 			: entry::AppI("NEUF", "spiking network simulator", "")
 		{
 			// TODO: data dimensions should come from MnistData
-			const uint32_t width = 28, height = 28;
+			const uint32_t width = 8, height = 8;
 
 			net.setSize(width * height);
 			auto ctx = std::make_shared<NetworkVisualContext>(net);
@@ -189,7 +193,13 @@ namespace
 				// Check if instancing is supported.
 				const bool instancingSupported = 0 != (BGFX_CAPS_INSTANCING & caps->supported);
 
-				float time = (float)((bx::getHPCounter() - m_timeOffset) / double(bx::getHPFrequency()));
+				int64_t now = bx::getHPCounter();
+				static int64_t last = now;
+				const int64_t frameTime = now - last;
+				last = now;
+				const double freq = double(bx::getHPFrequency());
+				float time = (float)((now - m_timeOffset) / freq);
+				const float deltaTimeSec = float(double(frameTime)/freq);
 
 				ImGui::Text("Time %.2f", time);
 
@@ -214,38 +224,89 @@ namespace
 
 				imguiEndFrame();
 
-				// Set view 0 default viewport.
-				bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height));
-
-				// This dummy draw call is here to make sure that view 0 is cleared
-				// if no other draw calls are submitted to view 0.
-				bgfx::touch(0);
-
-
-
-				// if (!instancingSupported)
 				// {
-				// 	// When instancing is not supported by GPU, implement alternative
-				// 	// code path that doesn't use instancing.
-				// 	bool blink = uint32_t(time * 3.0f) & 1;
-				// 	bgfx::dbgTextPrintf(0, 0, blink ? 0x4f : 0x04, " Instancing is not supported by GPU. ");
+				// 	// Set view 0 default viewport.
+				// 	bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height));
 
+				// 	// This dummy draw call is here to make sure that view 0 is cleared
+				// 	// if no other draw calls are submitted to view 0.
+				// 	bgfx::touch(0);
+
+				// 	const bx::Vec3 at = { 0.0f, 0.0f,   0.0f };
+				// 	const bx::Vec3 eye = { 0.0f, 0.0f, -35.0f };
+
+				// 	// Set view and projection matrix for view 0.
+				// 	{
+				// 		float view[16];
+				// 		bx::mtxLookAt(view, eye, at);
+
+				// 		float proj[16];
+				// 		bx::mtxProj(
+				// 			proj, 
+				// 			60.0f, 
+				// 			float(m_width) / float(m_height), 
+				// 			0.1f, 
+				// 			100.0f, 
+				// 			bgfx::getCaps()->homogeneousDepth);
+				// 		bgfx::setViewTransform(0, view, proj);
+
+				// 		// Set view 0 default viewport.
+				// 		bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height));
+				// 	}
 				// }
 
-				const bx::Vec3 at = { 0.0f, 0.0f,   0.0f };
-				const bx::Vec3 eye = { 0.0f, 0.0f, -35.0f };
-
-				// Set view and projection matrix for view 0.
 				{
+					const bool mouseOverGui = ImGui::MouseOverArea();
+					m_mouse.update(float(m_mouseState.m_mx), float(m_mouseState.m_my), m_mouseState.m_mz, m_width, m_height);
+					if (!mouseOverGui)
+					{
+						if (m_mouseState.m_buttons[entry::MouseButton::Left])
+						{
+							m_camera.orbit(m_mouse.m_dx, m_mouse.m_dy);
+						}
+						else if (m_mouseState.m_buttons[entry::MouseButton::Right])
+						{
+							m_camera.dolly(m_mouse.m_dx + m_mouse.m_dy);
+						}
+						else if (m_mouseState.m_buttons[entry::MouseButton::Middle])
+						{
+							m_settings.m_envRotDest += m_mouse.m_dx*2.0f;
+						}
+						else if (0 != m_mouse.m_scroll)
+						{
+							m_camera.dolly(float(m_mouse.m_scroll)*0.05f);
+						}
+					}
+					m_camera.update(deltaTimeSec);
+					// bx::memCopy(m_uniforms.m_cameraPos, &m_camera.m_pos.curr.x, 3*sizeof(float) );
+
+					// View Transform 0.
 					float view[16];
-					bx::mtxLookAt(view, eye, at);
+					// bx::mtxIdentity(view);
 
 					float proj[16];
-					bx::mtxProj(proj, 60.0f, float(m_width) / float(m_height), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
+					// bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f, 0.0, caps->homogeneousDepth);
+					// bgfx::setViewTransform(0, view, proj);
+
+					// View Transform 1.
+					m_camera.mtxLookAt(view);
+					bx::mtxProj(proj, 60.0f, float(m_width)/float(m_height), 0.1f, 100.0f, caps->homogeneousDepth);
 					bgfx::setViewTransform(0, view, proj);
 
-					// Set view 0 default viewport.
-					bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height));
+					// View rect.
+					bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height) );
+					// bgfx::setViewRect(1, 0, 0, uint16_t(m_width), uint16_t(m_height) );
+
+					// Env rotation.
+					const float amount = bx::min(deltaTimeSec/0.12f, 1.0f);
+					m_settings.m_envRotCurr = bx::lerp(m_settings.m_envRotCurr, m_settings.m_envRotDest, amount);
+
+					// Env mtx.
+					float mtxEnvView[16];
+					m_camera.envViewMtx(mtxEnvView);
+					float mtxEnvRot[16];
+					bx::mtxRotateY(mtxEnvRot, m_settings.m_envRotCurr);
+
 				}
 
 				m_lastFrameMissing = 0;
@@ -281,6 +342,11 @@ namespace
 		bgfx::ProgramHandle m_program;
 
 		int64_t m_timeOffset;
+
+		Camera m_camera;
+		Mouse m_mouse;
+		Settings m_settings;
+
 	};
 
 } // namespace
