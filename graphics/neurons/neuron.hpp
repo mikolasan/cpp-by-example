@@ -6,7 +6,7 @@
 
 
 struct Neuron {
-    size_t idx = 0;
+    uint32_t idx = 0;
     float v = 0.0f;
     float threshold = 1.0f;
     float tau = 20.0f;

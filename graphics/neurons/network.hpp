@@ -10,7 +10,9 @@
 
 struct Network {
     std::vector<Neuron> neurons;
-    std::vector<std::vector<Synapse>> synapses;
+    using Location = uint64_t;
+    std::unordered_map<Location, Synapse> synapses;
+    // std::vector<std::vector<Synapse>> synapses;
     float dt = 1.0f;
     float time = 0.0f;
 
@@ -25,7 +27,15 @@ struct Network {
 
     void setSize(int N) {
         neurons.resize(N);
-        synapses.resize(N, std::vector<Synapse>(N));
+        // synapses.resize(N, std::vector<Synapse>(N));
+    }
+
+    std::vector<float> get_current_voltage_state() const {
+        std::vector<float> state(neurons.size(), 0.0);
+        for (size_t i = 0; i < neurons.size(); ++i) {
+            state[i] = neurons[i].v;
+        }
+        return state;
     }
 
     void step(uint8_t input[784]) {
@@ -40,16 +50,17 @@ struct Network {
         std::vector<float> inputs(neurons.size(), 0.0f);
 
         // Synaptic input
-        for (size_t i = 0; i < neurons.size(); ++i) {
-            for (size_t j = 0; j < neurons.size(); ++j) {
-                auto& syn = synapses[i][j];
-                syn.update_pre(dt);
-                syn.update_post(dt);
+        for (auto& [loc, syn] : synapses) {
+            uint32_t pre_idx = loc & 0xffff;
+            uint32_t post_idx = (loc >> 8) & 0xffff;
+            
+            syn.update_pre(dt);
+            syn.update_post(dt);
 
-                if (neurons[j].spiked) {
-                    syn.on_pre_spike();
-                    inputs[i] += syn.weight;
-                }
+            // STDP
+            if (neurons[pre_idx].spiked) {
+                syn.on_pre_spike();
+                inputs[post_idx] += syn.weight;
             }
         }
 
@@ -58,11 +69,11 @@ struct Network {
             neurons[i].update(inputs[i], dt, time);
 
         // STDP
-        for (size_t i = 0; i < neurons.size(); ++i) {
-            for (size_t j = 0; j < neurons.size(); ++j) {
-                synapses[i][j].apply_stdp(neurons[j].spiked, neurons[i].spiked);
-                if (neurons[i].spiked) synapses[i][j].on_post_spike();
-            }
+        for (auto& [loc, syn] : synapses) {
+            uint32_t pre_idx = loc & 0xffff;
+            uint32_t post_idx = (loc >> 8) & 0xffff;
+            syn.apply_stdp(neurons[pre_idx].spiked, neurons[post_idx].spiked);
+            if (neurons[post_idx].spiked) syn.on_post_spike();
         }
 
         time += dt;
