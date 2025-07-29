@@ -1,5 +1,4 @@
 #include <iostream>
-#include <filesystem>
 #include <fstream>
 
 #include <bx/uint32_t.h>
@@ -15,13 +14,6 @@
 #include "logo.h"
 #include "imgui/bgfx_imgui.h"
 
-#include "neuron.hpp"
-#include "network.hpp"
-#include "render/neuron_render.hpp"
-#include "render/network_render.hpp"
-#include "simulation_clock.hpp"
-#include "data_processor.hpp"
-
 #include "camera.cpp"
 #include "mouse.cpp"
 #include "settings.cpp"
@@ -33,28 +25,23 @@
 namespace
 {
 
-const int32_t width = 28, height = 28;
 
-	class SpikingWorld : public entry::AppI
+	class BrainViz : public entry::AppI
 	{
 	public:
-		SpikingWorld(int n_neurons)
+		BrainViz(int n_neurons)
 			: entry::AppI("NEUF", "spiking network simulator", "")
 		{
+
 		}
 
 		void init(int32_t _argc, const char* const* _argv, uint32_t _width, uint32_t _height) override
 		{
 			Args args(_argc, _argv);
 
-			data.init();
-
-			// TODO: data dimensions should come from MnistData
-			
-
 			m_width = _width;
 			m_height = _height;
-			m_debug = BGFX_DEBUG_NONE;
+			m_debug = BGFX_DEBUG_TEXT;
 			m_reset = BGFX_RESET_VSYNC;
 
 			bgfx::Init init;
@@ -79,63 +66,20 @@ const int32_t width = 28, height = 28;
 				, 0
 			);
 
+
 			m_timeOffset = bx::getHPCounter();
 
 			imguiCreate();
-
-
-			net.setSize(data.get_input_size());
-			auto ctx = std::make_shared<NetworkVisualContext>(net);
-			net.render = std::make_shared<NetworkRenderStrategy>(ctx);
-
-			for (size_t i = 0; i < net.neurons.size(); ++i) {
-				auto ctx2 = std::make_shared<NeuronVisualContext>(net.neurons[i]);
-				ctx2->position = {
-					float(i % width),
-					float(i / width),
-					0.0f };
-				net.neurons[i].render = std::make_shared<NeuronRenderStrategy>(ctx2);
-			}
-
-			sim_clock.set_dt(10);
-			sim_clock.pause();
-			net.init();
-		}
-
-		void ResetSimulation() {
-			sim_clock.reset();
 		}
 
 		int shutdown() override
 		{
 			imguiDestroy();
 
-			net.destroy();
-
 			// Shutdown bgfx.
 			bgfx::shutdown();
 
 			return 0;
-		}
-
-		void drawCameraStats() {
-			// if (ImGui::IsKeyPressed(ImGuiKey_C)) {
-				// ImGui::Begin("Camera Stats", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-
-				ImGui::Text("Target (curr): %.2f %.2f %.2f", m_camera.m_target.curr.x, m_camera.m_target.curr.y, m_camera.m_target.curr.z);
-				ImGui::Text("Target (dest): %.2f %.2f %.2f", m_camera.m_target.dest.x, m_camera.m_target.dest.y, m_camera.m_target.dest.z);
-
-				ImGui::Separator();
-
-				ImGui::Text("Position (curr): %.2f %.2f %.2f", m_camera.m_pos.curr.x, m_camera.m_pos.curr.y, m_camera.m_pos.curr.z);
-				ImGui::Text("Position (dest): %.2f %.2f %.2f", m_camera.m_pos.dest.x, m_camera.m_pos.dest.y, m_camera.m_pos.dest.z);
-
-				ImGui::Separator();
-
-				ImGui::Text("Orbit: [%.2f, %.2f]", m_camera.m_orbit[0], m_camera.m_orbit[1]);
-
-				// ImGui::End();
-			// }
 		}
 
 		bool update() override
@@ -152,7 +96,6 @@ const int32_t width = 28, height = 28;
 					, uint16_t(m_height)
 				);
 
-				
 				showExampleDialog(this);
 
 				ImGui::SetNextWindowPos(
@@ -168,54 +111,6 @@ const int32_t width = 28, height = 28;
 					, 0
 				);
 
-				// Simulation time display
-				// ImGui::Text("Sim Time: %.2f ms", sim_time_ms);
-
-				// Control buttons
-				if (ImGui::Button("Play")) {
-					sim_clock.play();
-					// sim_state = SimState::Playing;
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Pause")) {
-					sim_clock.pause();
-					// sim_state = SimState::Paused;
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Step")) {
-					sim_clock.step();
-					// sim_state = SimState::StepOnce;
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Reset")) { ResetSimulation(); }
-
-				// Step duration (dt)
-				static int dt_index = 1;
-				const int dt_values[] = { 1, 10, 100, 1000 };
-				if (ImGui::Combo("dt (ms/step)", &dt_index, "1\0 10\0 100\0 1000\0")) {
-					dt = dt_values[dt_index];
-				}
-
-				// Real-time delay between steps
-				static int delay_index = 1;
-				const int delay_values[] = { 250, 500, 1000, 5000 };
-				if (ImGui::Combo("Delay between steps", &delay_index, "250ms\0 500ms\0 1s\0 5s\0")) {
-					real_time_delay_ms = delay_values[delay_index];
-				}
-
-				// Camera stats
-				drawCameraStats();
-
-				static int current_image = 0;
-				ImGui::SliderInt("Image Index", &current_image, 0, data.get_max_id());
-				ImGui::Text("Label: %d", data.get_current_label());
-
-				bgfx::TextureHandle texture = data.create_currnet_texture();
-
-				// Show image
-				ImTextureID tex_id = (ImTextureID)(uintptr_t)texture.idx;
-				ImGui::Image(tex_id, ImVec2(280, 280));
-
 				// Get renderer capabilities info.
 				const bgfx::Caps* caps = bgfx::getCaps();
 
@@ -228,10 +123,9 @@ const int32_t width = 28, height = 28;
 				last = now;
 				const double freq = double(bx::getHPFrequency());
 				float time = (float)((now - m_timeOffset) / freq);
-				const float deltaTimeSec = float(double(frameTime) / freq);
+				const float deltaTimeSec = float(double(frameTime)/freq);
 
-				ImGui::Text("Lats sim time %d", sim_clock.last_time_ms());
-				// ImGui::Text("dt %.5f", deltaTimeSec);
+				ImGui::Text("Time %.2f", time);
 
 				ImGui::PushEnabled(instancingSupported);
 				// ImGui::Checkbox("Use Instancing", &m_useInstancing);
@@ -300,11 +194,11 @@ const int32_t width = 28, height = 28;
 						}
 						else if (m_mouseState.m_buttons[entry::MouseButton::Middle])
 						{
-							m_settings.m_envRotDest += m_mouse.m_dx * 2.0f;
+							m_settings.m_envRotDest += m_mouse.m_dx*2.0f;
 						}
 						else if (0 != m_mouse.m_scroll)
 						{
-							m_camera.dolly(float(m_mouse.m_scroll) * 0.05f);
+							m_camera.dolly(float(m_mouse.m_scroll)*0.05f);
 						}
 					}
 					m_camera.update(deltaTimeSec);
@@ -320,45 +214,26 @@ const int32_t width = 28, height = 28;
 
 					// View Transform 1.
 					m_camera.mtxLookAt(view);
-					bx::mtxProj(proj, 60.0f, float(m_width) / float(m_height), 0.1f, 100.0f, caps->homogeneousDepth);
+					bx::mtxProj(proj, 60.0f, float(m_width)/float(m_height), 0.1f, 100.0f, caps->homogeneousDepth);
 					bgfx::setViewTransform(0, view, proj);
 
 					// View rect.
-					bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height));
+					bgfx::setViewRect(0, 0, 0, uint16_t(m_width), uint16_t(m_height) );
 					// bgfx::setViewRect(1, 0, 0, uint16_t(m_width), uint16_t(m_height) );
 
 					// Env rotation.
-					// const float amount = bx::min(deltaTimeSec / 0.12f, 1.0f);
-					// m_settings.m_envRotCurr = bx::lerp(m_settings.m_envRotCurr, m_settings.m_envRotDest, amount);
+					const float amount = bx::min(deltaTimeSec/0.12f, 1.0f);
+					m_settings.m_envRotCurr = bx::lerp(m_settings.m_envRotCurr, m_settings.m_envRotDest, amount);
 
 					// Env mtx.
-					// float mtxEnvView[16];
-					// m_camera.envViewMtx(mtxEnvView);
-					// float mtxEnvRot[16];
-					// bx::mtxRotateY(mtxEnvRot, m_settings.m_envRotCurr);
+					float mtxEnvView[16];
+					m_camera.envViewMtx(mtxEnvView);
+					float mtxEnvRot[16];
+					bx::mtxRotateY(mtxEnvRot, m_settings.m_envRotCurr);
 
 				}
 
 				m_lastFrameMissing = 0;
-
-				data.set_current_id(current_image);
-				sim_clock.update(deltaTimeSec);
-
-
-				if (sim_clock.advance()) {
-					net.step(data.convert_current_to_inputs());
-					std::vector<float> voltage_state = net.get_current_voltage_state();
-					float t = sim_clock.store(voltage_state);
-
-				}
-
-				// float matched_time;
-				// if (sim_clock.has_seen_state(neuron_state, matched_time)) {
-				// 	std::cout << "State repeated from time: " << matched_time << " ms\n";
-				// }
-
-				net.update(time);
-				net.draw(time);
 
 				// Advance to next frame. Rendering thread will be kicked to
 				// process submitted rendering primitives.
@@ -370,16 +245,7 @@ const int32_t width = 28, height = 28;
 			return false;
 		}
 
-		MnistDataProcessor data;
-
-		Network net;
 		entry::MouseState m_mouseState;
-
-		SimulationClock sim_clock;
-		// SimState sim_state;
-		uint64_t sim_time_ms;
-		uint32_t dt;
-		uint32_t real_time_delay_ms;
 
 		uint32_t m_width;
 		uint32_t m_height;
@@ -404,10 +270,6 @@ const int32_t width = 28, height = 28;
 
 int32_t _main_(int32_t argc, char** argv)
 {
-	std::cout << "Running from: "
-		<< std::filesystem::current_path()
-		<< std::endl;
-
-	SpikingWorld app(10);
+	BrainViz app(10);
 	return entry::runApp(&app, argc, argv);
 }

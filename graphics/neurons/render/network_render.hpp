@@ -18,6 +18,9 @@ struct NetworkVisualContext : VisualContext {
 };
 
 struct NetworkRenderStrategy : RenderStrategy {
+
+    const int32_t width = 28, height = 28;
+
     std::shared_ptr<NetworkVisualContext> ctx;
 
     NetworkRenderStrategy(std::shared_ptr<NetworkVisualContext> ctx) : ctx(ctx) {}
@@ -27,12 +30,6 @@ struct NetworkRenderStrategy : RenderStrategy {
         // 80 bytes stride = 64 bytes for 4x4 matrix + 16 bytes for RGBA color.
         instanceStride = 80;
         m_sideSize = 10;
-
-
-        // for (size_t i = 0; i < ctx->net.neurons.size(); i++)
-        // {
-        //     /* code */
-        // }
 
         NeuronRenderStrategy::init_once();
 
@@ -54,22 +51,62 @@ struct NetworkRenderStrategy : RenderStrategy {
         // }
         // std::cout << std::endl;
 
-        // // Create static vertex buffer.
-        // m_vbh = bgfx::createVertexBuffer(
-        // bgfx::makeRef(vertices.data(), uint32_t(vertices.size() * sizeof(PosColorVertex)))
-        // , PosColorVertex::ms_layout
-        // );
+        // // cube
 
-        // // Create static index buffer.
-        // m_ibh = bgfx::createIndexBuffer(
-        // bgfx::makeRef(indices.data(), uint32_t(indices.size() * sizeof(uint16_t)))
-        // );
+        static PosColorVertex s_cubeVertices[8] =
+        {
+            {-1.0f,  1.0f,  1.0f, 0xff000000 },
+            { 1.0f,  1.0f,  1.0f, 0xff0000ff },
+            {-1.0f, -1.0f,  1.0f, 0xff00ff00 },
+            { 1.0f, -1.0f,  1.0f, 0xff00ffff },
+            {-1.0f,  1.0f, -1.0f, 0xffff0000 },
+            { 1.0f,  1.0f, -1.0f, 0xffff00ff },
+            {-1.0f, -1.0f, -1.0f, 0xffffff00 },
+            { 1.0f, -1.0f, -1.0f, 0xffffffff },
+        };
+
+        static const uint16_t s_cubeTriList[] =
+        {
+            0, 1, 2, // 0
+            1, 3, 2,
+            4, 6, 5, // 2
+            5, 6, 7,
+            0, 2, 4, // 4
+            4, 2, 6,
+            1, 5, 3, // 6
+            5, 7, 3,
+            0, 4, 1, // 8
+            4, 5, 1,
+            2, 3, 6, // 10
+            6, 3, 7,
+        };
+
+        // // Create static vertex buffer.
+        m_selection_vbh = bgfx::createVertexBuffer(
+        bgfx::makeRef(s_cubeVertices, sizeof(s_cubeVertices) )
+        , PosColorVertex::ms_layout
+        );
+
+        // Create static index buffer.
+        m_selection_ibh = bgfx::createIndexBuffer(
+        bgfx::makeRef(s_cubeTriList, sizeof(s_cubeTriList) )
+        );
+
+        m_color[0] = 0.70f;
+        m_color[1] = 0.65f;
+        m_color[2] = 0.60f;
 
         m_program = loadProgram("vs_instancing", "fs_instancing");
+        m_selection_program = loadProgram("vs_selection", "fs_selection");
 
     }
 
     void update(float dt) override {
+        if (ImGui::IsKeyPressed(ImGuiKey_W)) selected_y = std::max(0, selected_y - 1);
+        if (ImGui::IsKeyPressed(ImGuiKey_S)) selected_y = std::min(height - 1, selected_y + 1);
+        if (ImGui::IsKeyPressed(ImGuiKey_A)) selected_x = std::max(0, selected_x - 1);
+        if (ImGui::IsKeyPressed(ImGuiKey_D)) selected_x = std::min(width - 1, selected_x + 1);
+        
         // to total number of instances to draw
         uint32_t totalCubes = ctx->net.neurons.size();
 
@@ -86,6 +123,12 @@ struct NetworkRenderStrategy : RenderStrategy {
         bgfx::allocInstanceDataBuffer(&idb, drawnCubes, instanceStride);
 
         uint8_t* data = idb.data;
+
+        const size_t n_neurons = ctx->net.neurons.size();
+        
+        const float offset = 3.0f;
+        const float start_x = - float(n_neurons / width) * offset / 2.0f;
+        const float start_y = - float(n_neurons / width) * offset / 2.0f;
 
         for (uint32_t ii = 0; ii < drawnCubes; ++ii)
         {
@@ -111,8 +154,8 @@ struct NetworkRenderStrategy : RenderStrategy {
             // |  2   6  10  14 |
             // |  3   7  11  15 |
 
-            mtx[12] = -15.0f + float(xx) * 3.0f;
-            mtx[13] = -15.0f + float(yy) * 3.0f;
+            mtx[12] = start_x + float(xx) * offset;
+            mtx[13] = start_y + float(yy) * offset;
             mtx[14] = 0.0f;
 
             float* color = (float*)&data[64];
@@ -143,6 +186,27 @@ struct NetworkRenderStrategy : RenderStrategy {
         // Submit primitive for rendering to view 0.
         bgfx::submit(0, m_program);
 
+
+        // Compute selection position
+        float sel_x = start_x + selected_x * offset;
+        float sel_y = start_y + selected_y * offset;
+        float sel_z = 0.0f;
+
+        // Create transform matrix
+        float selMtx[16];
+        bx::mtxIdentity(selMtx);
+        selMtx[12] = sel_x;
+        selMtx[13] = sel_y;
+        selMtx[14] = sel_z;
+
+        // Set transform, color, and render state
+        bgfx::setTransform(selMtx);
+        bgfx::setUniform(u_color, m_color);
+        bgfx::setVertexBuffer(0, m_selection_vbh);
+        bgfx::setIndexBuffer(m_selection_ibh);
+        bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);  // Use wireframe cube
+        bgfx::submit(0, m_selection_program);
+
     }
 
     void destroy() override {
@@ -152,10 +216,19 @@ struct NetworkRenderStrategy : RenderStrategy {
     bgfx::VertexBufferHandle m_vbh;
     bgfx::IndexBufferHandle  m_ibh;
 
+    bgfx::VertexBufferHandle m_selection_vbh;
+    bgfx::IndexBufferHandle  m_selection_ibh;
+
     uint16_t instanceStride;
     uint32_t drawnCubes;
     uint32_t m_lastFrameMissing;
     uint32_t m_sideSize;
 
+    int32_t selected_x = 0;
+    int32_t selected_y = 0;
+
+    float m_color[4];
+    bgfx::UniformHandle u_color;
+    bgfx::ProgramHandle m_selection_program;
     bgfx::ProgramHandle m_program;
 };

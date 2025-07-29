@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
 
 #include "neuron.hpp"
 #include "synapse.hpp"
@@ -38,16 +39,17 @@ struct Network {
         return state;
     }
 
-    void step(uint8_t input[784]) {
-
-        // for (size_t i = 0; i < 784; i++)
-        // {
-        //     if (input[i] > 0) {
-        //         neurons[i].v += 1.5f * (input[i] / 255.0f) * 0.2f;  // inject current to neuron 0
-        //     }
-        // }
+    void step(std::vector<uint8_t> inputs) {
+        std::cout << "step (" << time << ")\n";
         
-        std::vector<float> inputs(neurons.size(), 0.0f);
+        for (size_t i = 0; i < inputs.size(); i++)
+        {
+            if (inputs[i] > 0) {
+                neurons[i].v += 1.5f * (inputs[i] / 255.0f) * 0.2f;  // inject current to neuron 0
+            }
+        }
+        
+        std::vector<float> dv(neurons.size(), 0.0f);
 
         // Synaptic input
         for (auto& [loc, syn] : synapses) {
@@ -60,13 +62,13 @@ struct Network {
             // STDP
             if (neurons[pre_idx].spiked) {
                 syn.on_pre_spike();
-                inputs[post_idx] += syn.weight;
+                dv[post_idx] += syn.weight;
             }
         }
 
         // Neuron updates
         for (size_t i = 0; i < neurons.size(); ++i)
-            neurons[i].update(inputs[i], dt, time);
+            neurons[i].update(dv[i], dt, time);
 
         // STDP
         for (auto& [loc, syn] : synapses) {
