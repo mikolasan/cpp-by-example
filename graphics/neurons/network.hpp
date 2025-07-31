@@ -10,7 +10,10 @@
 
 
 struct Network {
-    std::vector<Neuron> neurons;
+    using NeuronLayer = std::vector<Neuron>;
+    // std::vector<Neuron> neurons;
+    std::vector<NeuronLayer> layers;
+
     using Location = uint64_t;
     std::unordered_map<Location, Synapse> synapses;
     // std::vector<std::vector<Synapse>> synapses;
@@ -21,15 +24,19 @@ struct Network {
 
     explicit Network() = default;
 
-    Network(int N) {
-        setSize(N);
+    Network() {
+        // setSize(N);
         // Init weights, if desired
     }
 
-    void setSize(int N) {
-        neurons.resize(N);
-        // synapses.resize(N, std::vector<Synapse>(N));
+    void addLayer(const NeuronLayer&& layer) {
+        layers.push_back(layer);
     }
+
+    // void setSize(int N) {
+    //     neurons.resize(N);
+    //     // synapses.resize(N, std::vector<Synapse>(N));
+    // }
 
     std::vector<float> get_current_voltage_state() const {
         std::vector<float> state(neurons.size(), 0.0);

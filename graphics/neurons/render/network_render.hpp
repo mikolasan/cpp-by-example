@@ -19,24 +19,21 @@ struct NetworkVisualContext : VisualContext {
 
 struct NetworkRenderStrategy : RenderStrategy {
 
-    const int32_t width = 28, height = 28;
-
     std::shared_ptr<NetworkVisualContext> ctx;
 
     NetworkRenderStrategy(std::shared_ptr<NetworkVisualContext> ctx) : ctx(ctx) {}
 
-    void define_min_area_size() {
-        const size_t n_neurons = ctx->net.neurons.size();
-        area_size_x = bx::ceil(bx::sqrt(float(n_neurons / width)));
-        area_size_y = area_size_x;
-        area_size_z = 1;
-    }
+    // void define_min_area_size() {
+    //     const size_t n_neurons = ctx->net.neurons.size();
+    //     area_size_x = bx::ceil(bx::sqrt(float(n_neurons / width)));
+    //     area_size_y = area_size_x;
+    //     area_size_z = 1;
+    // }
 
     void init() override {
         m_lastFrameMissing = 0;
         // 80 bytes stride = 64 bytes for 4x4 matrix + 16 bytes for RGBA color.
         instanceStride = 80;
-        m_sideSize = 10;
 
         NeuronRenderStrategy::init_once();
 
@@ -114,11 +111,17 @@ struct NetworkRenderStrategy : RenderStrategy {
         if (ImGui::IsKeyPressed(ImGuiKey_W))
             selected_y = std::max(0, selected_y - 1);
         if (ImGui::IsKeyPressed(ImGuiKey_S))
-            selected_y = std::min(height - 1, selected_y + 1);
+            selected_y = std::min(area_size_y - 1, selected_y + 1);
+        
         if (ImGui::IsKeyPressed(ImGuiKey_A))
             selected_x = std::max(0, selected_x - 1);
         if (ImGui::IsKeyPressed(ImGuiKey_D))
-            selected_x = std::min(width - 1, selected_x + 1);
+            selected_x = std::min(area_size_x - 1, selected_x + 1);
+        
+        if (ImGui::IsKeyPressed(ImGuiKey_R))
+            selected_x = std::max(0, selected_z - 1);
+        if (ImGui::IsKeyPressed(ImGuiKey_F))
+            selected_x = std::min(area_size_z - 1, selected_z + 1);
         
         // to total number of instances to draw
         uint32_t totalCubes = ctx->net.neurons.size();
@@ -137,12 +140,10 @@ struct NetworkRenderStrategy : RenderStrategy {
 
         uint8_t* data = idb.data;
 
-        const size_t n_neurons = ctx->net.neurons.size();
-        
         const float offset = 3.0f;
-        const float start_x = - float(n_neurons / width) * offset / 2.0f;
-        const float start_y = - float(n_neurons / width) * offset / 2.0f;
-        const float start_z = - float(n_neurons / width) * offset / 2.0f;
+        const float start_x = - area_size_x * offset / 2.0f;
+        const float start_y = - area_size_y * offset / 2.0f;
+        const float start_z = - area_size_z * offset / 2.0f;
 
         for (uint32_t ii = 0; ii < drawnCubes; ++ii)
         {
@@ -238,7 +239,6 @@ struct NetworkRenderStrategy : RenderStrategy {
     uint16_t instanceStride;
     uint32_t drawnCubes;
     uint32_t m_lastFrameMissing;
-    uint32_t m_sideSize;
 
     int32_t area_size_x = 0;
     int32_t area_size_y = 0;

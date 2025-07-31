@@ -20,7 +20,7 @@
 #include "render/neuron_render.hpp"
 #include "render/network_render.hpp"
 #include "simulation_clock.hpp"
-#include "data_processor.hpp"
+#include "mnist_data_processor.h"
 
 #include "camera.cpp"
 #include "mouse.cpp"
@@ -32,8 +32,6 @@
 
 namespace
 {
-
-const int32_t width = 28, height = 28;
 
 	class SpikingWorld : public entry::AppI
 	{
@@ -47,10 +45,7 @@ const int32_t width = 28, height = 28;
 		{
 			Args args(_argc, _argv);
 
-			data.init();
-
-			// TODO: data dimensions should come from MnistData
-			
+			data.init();			
 
 			m_width = _width;
 			m_height = _height;
@@ -88,14 +83,18 @@ const int32_t width = 28, height = 28;
 			auto ctx = std::make_shared<NetworkVisualContext>(net);
 			net.render = std::make_shared<NetworkRenderStrategy>(ctx);
 
-			for (size_t i = 0; i < net.neurons.size(); ++i) {
-				auto ctx2 = std::make_shared<NeuronVisualContext>(net.neurons[i]);
-				ctx2->position = {
-					float(i % width),
-					float(i / width),
-					0.0f };
-				net.neurons[i].render = std::make_shared<NeuronRenderStrategy>(ctx2);
-			}
+
+			net.addLayer(data.prepare_neurons());
+			// bx::Vec3 area_size = data.get_area_size();
+
+			// for (size_t i = 0; i < net.neurons.size(); ++i) {
+			// 	auto ctx2 = std::make_shared<NeuronVisualContext>(net.neurons[i]);
+			// 	ctx2->position = {
+			// 		float(i % int32_t(area_size.x)),
+			// 		i / area_size.x,
+			// 		0.0f };
+			// 	net.neurons[i].render = std::make_shared<NeuronRenderStrategy>(ctx2);
+			// }
 
 			sim_clock.set_dt(10);
 			sim_clock.pause();
