@@ -229,10 +229,14 @@ add_executable(neurons_gui
     neurons/render/neuron_render.hpp
     neurons/render/neuron_render.cpp
     neurons/render/network_render.hpp
+    # neurons/camera.cpp
+    # neurons/mouse.cpp
+    # neurons/settings.cpp
     neurons/neurons_gui.cpp
 )
 
 target_compile_definitions(neurons_gui PRIVATE BX_CONFIG_DEBUG=0)
+target_compile_definitions(neurons_gui PRIVATE USE_ENTRY=1)
 target_compile_definitions(neurons_gui PRIVATE ENTRY_CONFIG_USE_SDL=1)
 target_compile_definitions(neurons_gui PRIVATE IMGUI_INCLUDE_IMGUI_USER_H)
 target_compile_definitions(neurons_gui PRIVATE IMGUI_INCLUDE_IMGUI_USER_INL)
@@ -258,6 +262,77 @@ target_link_directories(neurons_gui PUBLIC
     thirdparty/bgfx/.build/win64_vs2022/bin)
 
 target_link_libraries(neurons_gui 
+    OpenGL::GL 
+    ${SDL2_LIBRARIES} 
+    dirent
+    bgfx${CMAKE_BUILD_TYPE}
+    bimg${CMAKE_BUILD_TYPE}
+    bimg_decode${CMAKE_BUILD_TYPE}
+    bx${CMAKE_BUILD_TYPE}
+)
+
+###############################################
+
+add_executable(brain
+    bgfx_ext/bgfx_utils.cpp
+    bgfx_ext/entry/cmd.cpp
+    bgfx_ext/entry/dialog.cpp
+    bgfx_ext/entry/entry.cpp
+    bgfx_ext/entry/entry_sdl.cpp
+    bgfx_ext/entry/input.cpp
+    bgfx_ext/imgui/bgfx_imgui.cpp
+    bgfx_ext/example-glue.cpp
+    thirdparty/meshoptimizer/src/allocator.cpp
+    thirdparty/meshoptimizer/src/clusterizer.cpp
+    thirdparty/meshoptimizer/src/indexanalyzer.cpp
+    thirdparty/meshoptimizer/src/indexcodec.cpp
+    thirdparty/meshoptimizer/src/indexgenerator.cpp
+    thirdparty/meshoptimizer/src/overdrawoptimizer.cpp
+    thirdparty/meshoptimizer/src/partition.cpp
+    thirdparty/meshoptimizer/src/quantization.cpp
+    thirdparty/meshoptimizer/src/rasterizer.cpp
+    thirdparty/meshoptimizer/src/simplifier.cpp
+    thirdparty/meshoptimizer/src/spatialorder.cpp
+    thirdparty/meshoptimizer/src/stripifier.cpp
+    thirdparty/meshoptimizer/src/vcacheoptimizer.cpp
+    thirdparty/meshoptimizer/src/vertexcodec.cpp
+    thirdparty/meshoptimizer/src/vertexfilter.cpp
+    thirdparty/meshoptimizer/src/vfetchoptimizer.cpp
+    thirdparty/imgui/imgui.cpp
+    thirdparty/imgui/imgui_widgets.cpp
+    thirdparty/imgui/imgui_tables.cpp
+    thirdparty/imgui/imgui_draw.cpp
+    thirdparty/imgui/backends/imgui_impl_opengl3.cpp
+    thirdparty/imgui/backends/imgui_impl_sdl2.cpp
+    neurons/brain.cpp
+)
+
+target_compile_definitions(brain PRIVATE BX_CONFIG_DEBUG=0)
+target_compile_definitions(brain PRIVATE ENTRY_CONFIG_USE_SDL=1)
+target_compile_definitions(brain PRIVATE IMGUI_INCLUDE_IMGUI_USER_H)
+target_compile_definitions(brain PRIVATE IMGUI_INCLUDE_IMGUI_USER_INL)
+
+target_include_directories(brain PRIVATE 
+    thirdparty 
+    thirdparty/bgfx/include 
+    thirdparty/bimg/include 
+    thirdparty/bx/include 
+    thirdparty/imgui 
+    thirdparty/imgui/backends 
+    bgfx_ext
+    imgui_ext 
+    neurons
+)
+
+if (MSVC)
+    set_property(TARGET brain PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif ()
+
+target_link_directories(brain PUBLIC 
+    thirdparty/bgfx/.build/win64_vs2022/bin)
+
+target_link_libraries(brain 
     OpenGL::GL 
     ${SDL2_LIBRARIES} 
     dirent

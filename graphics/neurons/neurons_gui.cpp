@@ -152,7 +152,6 @@ const int32_t width = 28, height = 28;
 					, uint16_t(m_height)
 				);
 
-				
 				showExampleDialog(this);
 
 				ImGui::SetNextWindowPos(
@@ -250,6 +249,29 @@ const int32_t width = 28, height = 28;
 					ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Draw call limit reached!");
 				}
 
+
+				data.set_current_id(current_image);
+				sim_clock.update(deltaTimeSec);
+
+
+				if (sim_clock.advance()) {
+					net.step(data.convert_current_to_inputs());
+					std::vector<float> voltage_state = net.get_current_voltage_state();
+					float t = sim_clock.store(voltage_state);
+
+				}
+
+				// float matched_time;
+				// if (sim_clock.has_seen_state(neuron_state, matched_time)) {
+				// 	std::cout << "State repeated from time: " << matched_time << " ms\n";
+				// }
+
+				net.update(time);
+				net.draw(time);
+
+
+				
+
 				ImGui::End();
 
 				imguiEndFrame();
@@ -341,25 +363,7 @@ const int32_t width = 28, height = 28;
 
 				m_lastFrameMissing = 0;
 
-				data.set_current_id(current_image);
-				sim_clock.update(deltaTimeSec);
-
-
-				if (sim_clock.advance()) {
-					net.step(data.convert_current_to_inputs());
-					std::vector<float> voltage_state = net.get_current_voltage_state();
-					float t = sim_clock.store(voltage_state);
-
-				}
-
-				// float matched_time;
-				// if (sim_clock.has_seen_state(neuron_state, matched_time)) {
-				// 	std::cout << "State repeated from time: " << matched_time << " ms\n";
-				// }
-
-				net.update(time);
-				net.draw(time);
-
+				
 				// Advance to next frame. Rendering thread will be kicked to
 				// process submitted rendering primitives.
 				bgfx::frame();

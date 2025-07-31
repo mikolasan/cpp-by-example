@@ -41,9 +41,17 @@ Lua51_ROOT = "C:\<path_to_cpp-skill>\windows\lua"
 
 ## Build
 
-```
+Normally
+
+```bash
 cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 cmake --build build --target all
+```
+
+On Windows for Visual Studio to have nice stack traces
+
+```shell
+cmake -DCMAKE_BUILD_TYPE=Debug -S . -B build_msvc -G "Visual Studio 17 2022"
 ```
 
 ## The book

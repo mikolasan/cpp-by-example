@@ -25,6 +25,13 @@ struct NetworkRenderStrategy : RenderStrategy {
 
     NetworkRenderStrategy(std::shared_ptr<NetworkVisualContext> ctx) : ctx(ctx) {}
 
+    void define_min_area_size() {
+        const size_t n_neurons = ctx->net.neurons.size();
+        area_size_x = bx::ceil(bx::sqrt(float(n_neurons / width)));
+        area_size_y = area_size_x;
+        area_size_z = 1;
+    }
+
     void init() override {
         m_lastFrameMissing = 0;
         // 80 bytes stride = 64 bytes for 4x4 matrix + 16 bytes for RGBA color.
@@ -95,17 +102,23 @@ struct NetworkRenderStrategy : RenderStrategy {
         m_color[0] = 0.70f;
         m_color[1] = 0.65f;
         m_color[2] = 0.60f;
+        m_color[3] = 1.0f;
+
+        m_selection_program = loadProgram("vs_selection", "fs_selection");
+        u_color = bgfx::createUniform("u_color", bgfx::UniformType::Vec4);
 
         m_program = loadProgram("vs_instancing", "fs_instancing");
-        m_selection_program = loadProgram("vs_selection", "fs_selection");
-
     }
 
     void update(float dt) override {
-        if (ImGui::IsKeyPressed(ImGuiKey_W)) selected_y = std::max(0, selected_y - 1);
-        if (ImGui::IsKeyPressed(ImGuiKey_S)) selected_y = std::min(height - 1, selected_y + 1);
-        if (ImGui::IsKeyPressed(ImGuiKey_A)) selected_x = std::max(0, selected_x - 1);
-        if (ImGui::IsKeyPressed(ImGuiKey_D)) selected_x = std::min(width - 1, selected_x + 1);
+        if (ImGui::IsKeyPressed(ImGuiKey_W))
+            selected_y = std::max(0, selected_y - 1);
+        if (ImGui::IsKeyPressed(ImGuiKey_S))
+            selected_y = std::min(height - 1, selected_y + 1);
+        if (ImGui::IsKeyPressed(ImGuiKey_A))
+            selected_x = std::max(0, selected_x - 1);
+        if (ImGui::IsKeyPressed(ImGuiKey_D))
+            selected_x = std::min(width - 1, selected_x + 1);
         
         // to total number of instances to draw
         uint32_t totalCubes = ctx->net.neurons.size();
@@ -129,6 +142,7 @@ struct NetworkRenderStrategy : RenderStrategy {
         const float offset = 3.0f;
         const float start_x = - float(n_neurons / width) * offset / 2.0f;
         const float start_y = - float(n_neurons / width) * offset / 2.0f;
+        const float start_z = - float(n_neurons / width) * offset / 2.0f;
 
         for (uint32_t ii = 0; ii < drawnCubes; ++ii)
         {
@@ -190,7 +204,7 @@ struct NetworkRenderStrategy : RenderStrategy {
         // Compute selection position
         float sel_x = start_x + selected_x * offset;
         float sel_y = start_y + selected_y * offset;
-        float sel_z = 0.0f;
+        float sel_z = start_z + selected_z * offset;
 
         // Create transform matrix
         float selMtx[16];
@@ -210,6 +224,8 @@ struct NetworkRenderStrategy : RenderStrategy {
     }
 
     void destroy() override {
+        bgfx::destroy(u_color);
+        bgfx::destroy(m_selection_program);
         bgfx::destroy(m_program);
     }
 
@@ -224,8 +240,13 @@ struct NetworkRenderStrategy : RenderStrategy {
     uint32_t m_lastFrameMissing;
     uint32_t m_sideSize;
 
+    int32_t area_size_x = 0;
+    int32_t area_size_y = 0;
+    int32_t area_size_z = 0;
+    
     int32_t selected_x = 0;
     int32_t selected_y = 0;
+    int32_t selected_z = 0;
 
     float m_color[4];
     bgfx::UniformHandle u_color;
