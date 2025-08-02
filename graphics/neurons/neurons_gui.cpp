@@ -79,7 +79,6 @@ namespace
 			imguiCreate();
 
 
-			net.setSize(data.get_input_size());
 			auto ctx = std::make_shared<NetworkVisualContext>(net);
 			net.render = std::make_shared<NetworkRenderStrategy>(ctx);
 

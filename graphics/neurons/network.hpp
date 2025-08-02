@@ -10,8 +10,8 @@
 
 
 struct Network {
-    using NeuronLayer = std::vector<Neuron>;
-    // std::vector<Neuron> neurons;
+    using NeuronLayer = std::vector<std::shared_ptr<Neuron>>;
+    std::vector<std::shared_ptr<Neuron>> neurons;
     std::vector<NeuronLayer> layers;
 
     using Location = uint64_t;
@@ -41,7 +41,7 @@ struct Network {
     std::vector<float> get_current_voltage_state() const {
         std::vector<float> state(neurons.size(), 0.0);
         for (size_t i = 0; i < neurons.size(); ++i) {
-            state[i] = neurons[i].v;
+            state[i] = neurons[i]->v;
         }
         return state;
     }
@@ -52,7 +52,7 @@ struct Network {
         for (size_t i = 0; i < inputs.size(); i++)
         {
             if (inputs[i] > 0) {
-                neurons[i].v += 1.5f * (inputs[i] / 255.0f) * 0.2f;  // inject current to neuron 0
+                neurons[i]->v += 1.5f * (inputs[i] / 255.0f) * 0.2f;  // inject current to neuron 0
             }
         }
         
@@ -67,7 +67,7 @@ struct Network {
             syn.update_post(dt);
 
             // STDP
-            if (neurons[pre_idx].spiked) {
+            if (neurons[pre_idx]->spiked) {
                 syn.on_pre_spike();
                 dv[post_idx] += syn.weight;
             }
@@ -75,14 +75,14 @@ struct Network {
 
         // Neuron updates
         for (size_t i = 0; i < neurons.size(); ++i)
-            neurons[i].update(dv[i], dt, time);
+            neurons[i]->update(dv[i], dt, time);
 
         // STDP
         for (auto& [loc, syn] : synapses) {
             uint32_t pre_idx = loc & 0xffff;
             uint32_t post_idx = (loc >> 8) & 0xffff;
-            syn.apply_stdp(neurons[pre_idx].spiked, neurons[post_idx].spiked);
-            if (neurons[post_idx].spiked) syn.on_post_spike();
+            syn.apply_stdp(neurons[pre_idx]->spiked, neurons[post_idx]->spiked);
+            if (neurons[post_idx]->spiked) syn.on_post_spike();
         }
 
         time += dt;

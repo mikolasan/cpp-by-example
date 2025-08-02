@@ -12,6 +12,7 @@
 
 #include "data_processor.h"
 #include "neuron.hpp"
+#include "network.hpp"
 
 struct MnistImage;
 
@@ -34,7 +35,7 @@ public:
   bgfx::TextureHandle create_currnet_texture();
   std::vector<uint8_t> convert_current_to_inputs();
 
-  std::vector<Neuron> prepare_neurons() const;
+  Network::NeuronLayer prepare_neurons() const;
 
 };
 

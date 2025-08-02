@@ -88,7 +88,7 @@ std::vector<uint8_t> MnistDataProcessor::convert_current_to_inputs() {
   return inputs;
 }
 
-std::vector<Neuron> MnistDataProcessor::prepare_neurons() const {
+Network::NeuronLayer MnistDataProcessor::prepare_neurons() const {
   std::vector<Neuron> neurons(input_size);
   bx::Vec3 area_size = get_area_size();
 
