@@ -189,7 +189,7 @@ if (MSVC)
 endif ()
 
 add_executable(neurons_cli
-    neurons/network.hpp
+    neurons/network.cpp
     neurons/neurons_cli.cpp
 )
 
@@ -225,10 +225,10 @@ add_executable(neurons_gui
     thirdparty/imgui/backends/imgui_impl_opengl3.cpp
     thirdparty/imgui/backends/imgui_impl_sdl2.cpp
     neurons/renderer.cpp
-    neurons/network.hpp
-    neurons/render/neuron_render.hpp
+    neurons/network.cpp
+    neurons/mnist_data_processor.cpp
     neurons/render/neuron_render.cpp
-    neurons/render/network_render.hpp
+    neurons/render/network_render.cpp
     # neurons/camera.cpp
     # neurons/mouse.cpp
     # neurons/settings.cpp

@@ -1,15 +1,6 @@
 #include "mnist_data_processor.h"
 #include "render/neuron_render.hpp"
 
-
-const size_t input_size = 784;
-const uint32_t width = 28, height = 28;
-
-struct MnistImage {
-  uint8_t label;
-  uint8_t pixels[input_size];
-};
-
 std::vector<MnistImage> load_mnist_bin(const std::string& path) {
   std::ifstream in(path, std::ios::binary);
   std::vector<MnistImage> images;
@@ -89,15 +80,18 @@ std::vector<uint8_t> MnistDataProcessor::convert_current_to_inputs() {
 }
 
 Network::NeuronLayer MnistDataProcessor::prepare_neurons() const {
-  std::vector<Neuron> neurons(input_size);
+  Network::NeuronLayer neurons(input_size);
   bx::Vec3 area_size = get_area_size();
 
   for (size_t i = 0; i < input_size; ++i) {
+    neurons[i] = std::make_shared<Neuron>();
     auto ctx = std::make_shared<NeuronVisualContext>(neurons[i]);
     ctx->position = {
       float(i % int32_t(area_size.x)),
       i / area_size.x,
       0.0f };
-    neurons[i].render = std::make_shared<NeuronRenderStrategy>(ctx);
+    neurons[i]->render = std::make_shared<NeuronRenderStrategy>(ctx);
   }
+
+  return neurons;
 }

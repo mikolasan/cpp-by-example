@@ -34,9 +34,9 @@ struct PosColorVertex
 struct NeuronVisualContext : VisualContext {
   size_t idx;
   bx::Vec3 position;
-  Neuron& neuron;
+  std::shared_ptr<Neuron> neuron;
 
-  explicit NeuronVisualContext(Neuron& neuron) : position({0.0f, 0.0f, 0.0f}), neuron(neuron) {}
+  explicit NeuronVisualContext(std::shared_ptr<Neuron> neuron) : position({0.0f, 0.0f, 0.0f}), neuron(neuron) {}
 };
 
 // TODO: many classes have one instance of subclass 

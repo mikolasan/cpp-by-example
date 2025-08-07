@@ -18,7 +18,7 @@
 #include "neuron.hpp"
 #include "network.hpp"
 #include "render/neuron_render.hpp"
-#include "render/network_render.hpp"
+#include "render/network_render.h"
 #include "simulation_clock.hpp"
 #include "mnist_data_processor.h"
 
@@ -153,11 +153,11 @@ namespace
 				showExampleDialog(this);
 
 				ImGui::SetNextWindowPos(
-					ImVec2(m_width - m_width / 5.0f - 10.0f, 10.0f)
+					ImVec2(m_width - m_width / 3.0f - 10.0f, 10.0f)
 					, ImGuiCond_FirstUseEver
 				);
 				ImGui::SetNextWindowSize(
-					ImVec2(m_width / 5.0f, m_height / 2.0f)
+					ImVec2(m_width / 3.0f, m_height / 1.2f)
 					, ImGuiCond_FirstUseEver
 				);
 				ImGui::Begin("Settings"

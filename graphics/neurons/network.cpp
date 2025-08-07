@@ -1,0 +1,88 @@
+#include <iostream>
+
+#include "network.h"
+
+void Network::addLayer(const NeuronLayer&& layer) {
+    layers.push_back(layer);
+    neurons.assign(layer.begin(), layer.end());
+    if (render && std::dynamic_pointer_cast<NetworkRenderStrategy>(render) != nullptr) {
+        std::dynamic_pointer_cast<NetworkRenderStrategy>(render)->addLayer(layer);
+    }
+}
+
+// void setSize(int N) {
+//     neurons.resize(N);
+//     // synapses.resize(N, std::vector<Synapse>(N));
+// }
+
+std::vector<float> Network::get_current_voltage_state() const {
+    std::vector<float> state(neurons.size(), 0.0);
+    for (size_t i = 0; i < neurons.size(); ++i) {
+        state[i] = neurons[i]->v;
+    }
+    return state;
+}
+
+void Network::step(std::vector<uint8_t> inputs) {
+    std::cout << "step (" << time << ")\n";
+    
+    for (size_t i = 0; i < inputs.size(); i++)
+    {
+        if (inputs[i] > 0) {
+            neurons[i]->v += 1.5f * (inputs[i] / 255.0f) * 0.2f;  // inject current to neuron 0
+        }
+    }
+    
+    std::vector<float> dv(neurons.size(), 0.0f);
+
+    // Synaptic input
+    for (auto& [loc, syn] : synapses) {
+        uint32_t pre_idx = loc & 0xffff;
+        uint32_t post_idx = (loc >> 8) & 0xffff;
+        
+        syn.update_pre(dt);
+        syn.update_post(dt);
+
+        // STDP
+        if (neurons[pre_idx]->spiked) {
+            syn.on_pre_spike();
+            dv[post_idx] += syn.weight;
+        }
+    }
+
+    // Neuron updates
+    for (size_t i = 0; i < neurons.size(); ++i)
+        neurons[i]->update(dv[i], dt, time);
+
+    // STDP
+    for (auto& [loc, syn] : synapses) {
+        uint32_t pre_idx = loc & 0xffff;
+        uint32_t post_idx = (loc >> 8) & 0xffff;
+        syn.apply_stdp(neurons[pre_idx]->spiked, neurons[post_idx]->spiked);
+        if (neurons[post_idx]->spiked) syn.on_post_spike();
+    }
+
+    time += dt;
+}
+
+void Network::init() {
+    if (render) render->init();
+}
+
+void Network::draw(float time) const {
+    if (render) render->draw(time);
+}
+
+// void draw() const {
+//     for (auto& n : neurons) {
+//         n.draw();
+//     }
+// }
+
+void Network::update(float dt) {
+    if (render) render->update(dt);
+}
+
+void Network::destroy() const {
+    if (render) render->destroy();
+}

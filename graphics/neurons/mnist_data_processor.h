@@ -14,7 +14,13 @@
 #include "neuron.hpp"
 #include "network.hpp"
 
-struct MnistImage;
+const size_t input_size = 784;
+const uint32_t width = 28, height = 28;
+
+struct MnistImage {
+  uint8_t label;
+  uint8_t pixels[input_size];
+};
 
 class MnistDataProcessor : public DataProcessor {
 private:
