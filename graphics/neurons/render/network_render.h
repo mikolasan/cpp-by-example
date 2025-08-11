@@ -32,10 +32,13 @@ struct NetworkRenderStrategy : RenderStrategy {
     // }
 
     void init() override;
-    void addLayer(const NeuronLayer& layer);
+    void addLayer(const NeuronLayer& layer, const std::vector<size_t>& area_size);
     void update(float dt) override;
     void draw(float time) const override;
     void destroy() override;
+
+    void drawNeurons(float time) const;
+    void drawSelection(float time) const;
 
     bgfx::VertexBufferHandle m_vbh;
     bgfx::IndexBufferHandle  m_ibh;

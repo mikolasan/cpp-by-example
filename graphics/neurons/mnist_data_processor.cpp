@@ -23,7 +23,7 @@ bgfx::TextureHandle create_mnist_texture(const uint8_t* pixels) {
     rgba[i * 4 + 3] = 255;
   }
 
-  const bgfx::Memory* mem = bgfx::copy(rgba.data(), rgba.size());
+  const bgfx::Memory* mem = bgfx::copy(rgba.data(), static_cast<uint32_t>(rgba.size()));
   return bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, 0, mem);
 }
 
@@ -37,8 +37,8 @@ size_t MnistDataProcessor::get_input_size() const {
   return input_size;
 }
 
-bx::Vec3 MnistDataProcessor::get_area_size() const {
-  return { width, height, 1.0f };
+std::vector<size_t> MnistDataProcessor::get_area_size() const {
+  return { width, height, 1 };
 }
 
 size_t MnistDataProcessor::get_max_id() const {
@@ -79,16 +79,16 @@ std::vector<uint8_t> MnistDataProcessor::convert_current_to_inputs() {
   return inputs;
 }
 
-Network::NeuronLayer MnistDataProcessor::prepare_neurons() const {
-  Network::NeuronLayer neurons(input_size);
-  bx::Vec3 area_size = get_area_size();
+NeuronLayer MnistDataProcessor::prepare_neurons() const {
+  NeuronLayer neurons(input_size);
+  const auto area_size = get_area_size();
 
   for (size_t i = 0; i < input_size; ++i) {
     neurons[i] = std::make_shared<Neuron>();
     auto ctx = std::make_shared<NeuronVisualContext>(neurons[i]);
     ctx->position = {
-      float(i % int32_t(area_size.x)),
-      i / area_size.x,
+      float(i % area_size[0]),
+      float(i / area_size[0]),
       0.0f };
     neurons[i]->render = std::make_shared<NeuronRenderStrategy>(ctx);
   }

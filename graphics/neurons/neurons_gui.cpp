@@ -16,7 +16,7 @@
 #include "imgui/bgfx_imgui.h"
 
 #include "neuron.hpp"
-#include "network.hpp"
+#include "network.h"
 #include "render/neuron_render.hpp"
 #include "render/network_render.h"
 #include "simulation_clock.hpp"
@@ -83,8 +83,11 @@ namespace
 			net.render = std::make_shared<NetworkRenderStrategy>(ctx);
 
 
-			net.addLayer(data.prepare_neurons());
-			// bx::Vec3 area_size = data.get_area_size();
+			bool loadReceptors = false;
+			if (loadReceptors) {
+				const auto area_size = data.get_area_size();
+				net.addLayer(data.prepare_neurons(), area_size);
+			}
 
 			// for (size_t i = 0; i < net.neurons.size(); ++i) {
 			// 	auto ctx2 = std::make_shared<NeuronVisualContext>(net.neurons[i]);

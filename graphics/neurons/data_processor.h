@@ -1,11 +1,11 @@
 #ifndef DATA_PROCESSOR_H
 #define DATA_PROCESSOR_H
 
-#include <bx/math.h>
+#include <vector>
 
 
 class DataProcessor {
-  virtual bx::Vec3 get_area_size() const = 0;
+  virtual std::vector<size_t> get_area_size() const = 0;
 };
 
 

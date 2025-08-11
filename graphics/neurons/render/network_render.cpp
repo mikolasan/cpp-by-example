@@ -81,7 +81,12 @@ void NetworkRenderStrategy::init() {
     m_program = loadProgram("vs_instancing", "fs_instancing");
 }
 
-void NetworkRenderStrategy::addLayer(const NeuronLayer& layer) {}
+void NetworkRenderStrategy::addLayer(const NeuronLayer& layer, const std::vector<size_t>& area_size) {
+    area_size_x = area_size[0];
+    area_size_y = area_size[1];
+    area_size_z = area_size[2];
+
+}
 
 void NetworkRenderStrategy::update(float dt) {
     if (ImGui::IsKeyPressed(ImGuiKey_W))
@@ -98,19 +103,23 @@ void NetworkRenderStrategy::update(float dt) {
         selected_x = std::max(0, selected_z - 1);
     if (ImGui::IsKeyPressed(ImGuiKey_F))
         selected_x = std::min(area_size_z - 1, selected_z + 1);
-    
-    // to total number of instances to draw
+
+        // to total number of instances to draw
     uint32_t totalCubes = ctx->net.neurons.size();
 
-    // figure out how big of a buffer is available
-    drawnCubes = bgfx::getAvailInstanceDataBuffer(totalCubes, instanceStride);
+    if (totalCubes > 0) {
+        // figure out how big of a buffer is available
+        drawnCubes = bgfx::getAvailInstanceDataBuffer(totalCubes, instanceStride);
 
-    // save how many we couldn't draw due to buffer room so we can display it
-    m_lastFrameMissing = totalCubes - drawnCubes;
+        // save how many we couldn't draw due to buffer room so we can display it
+        m_lastFrameMissing = totalCubes - drawnCubes;
+    } else {
+        drawnCubes = 0;
+        m_lastFrameMissing = 0;
+    }
 }
 
-void NetworkRenderStrategy::draw(float time) const {
-
+void NetworkRenderStrategy::drawNeurons(float time) const {
     bgfx::InstanceDataBuffer idb;
     bgfx::allocInstanceDataBuffer(&idb, drawnCubes, instanceStride);
 
@@ -176,7 +185,14 @@ void NetworkRenderStrategy::draw(float time) const {
 
     // Submit primitive for rendering to view 0.
     bgfx::submit(0, m_program);
+}
 
+void NetworkRenderStrategy::drawSelection(float time) const {
+
+    const float offset = 3.0f;
+    const float start_x = - area_size_x * offset / 2.0f;
+    const float start_y = - area_size_y * offset / 2.0f;
+    const float start_z = - area_size_z * offset / 2.0f;
 
     // Compute selection position
     float sel_x = start_x + selected_x * offset;
@@ -197,7 +213,14 @@ void NetworkRenderStrategy::draw(float time) const {
     bgfx::setIndexBuffer(m_selection_ibh);
     bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);  // Use wireframe cube
     bgfx::submit(0, m_selection_program);
+}
 
+void NetworkRenderStrategy::draw(float time) const {
+    if (drawnCubes > 0) {
+        drawNeurons(time);
+    }
+
+    drawSelection(time);
 }
 
 void NetworkRenderStrategy::destroy() {

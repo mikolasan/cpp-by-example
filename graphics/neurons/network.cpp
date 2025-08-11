@@ -1,19 +1,58 @@
 #include <iostream>
 
 #include "network.h"
+#include "render/neuron_render.hpp"
+#include "render/network_render.h"
 
-void Network::addLayer(const NeuronLayer&& layer) {
+
+void Network::addLayer(const NeuronLayer&& layer, const std::vector<size_t>& area_size) {
     layers.push_back(layer);
-    neurons.assign(layer.begin(), layer.end());
+
+    uint32_t last_id = neurons.back()->idx;
+    for (auto it = layer.begin(); it != layer.end(); ++it)
+    {
+        (*it)->idx = ++last_id;
+        neurons.emplace_back(std::move(*it));
+    }
+
+    // neurons.assign(layer.begin(), layer.end());
     if (render && std::dynamic_pointer_cast<NetworkRenderStrategy>(render) != nullptr) {
-        std::dynamic_pointer_cast<NetworkRenderStrategy>(render)->addLayer(layer);
+        std::dynamic_pointer_cast<NetworkRenderStrategy>(render)->addLayer(layer, area_size);
     }
 }
 
-// void setSize(int N) {
-//     neurons.resize(N);
-//     // synapses.resize(N, std::vector<Synapse>(N));
-// }
+void Network::addNeuron(const std::vector<size_t>& pos, const NeuronLayer& connected_to) {
+    uint32_t layer = pos[2];
+    if (layer >= layers.size()) {
+        std::cerr << "wrong layer position\n";
+        return;
+    }
+
+    std::shared_ptr<Neuron> neuron = std::make_shared<Neuron>();
+    neuron->idx = create_id(nullptr);
+    auto ctx = std::make_shared<NeuronVisualContext>(neuron);
+    ctx->position = { float(pos[0]), float(pos[1]), float(pos[2]) };
+    neuron->render = std::make_shared<NeuronRenderStrategy>(ctx);
+
+    layers[layer].push_back(neuron);
+    neurons.push_back(neuron);
+}
+
+void Network::addConnection(const std::shared_ptr<Neuron>& n1, const std::shared_ptr<Neuron>& n2) {
+    synapses.emplace(idsToLocation(n1->idx, n2->idx), std::make_shared<Synapse>());
+}
+
+std::pair<uint32_t, uint32_t> Network::locationToIds(uint64_t loc) const {
+    uint32_t pre_idx = loc & 0xffff;
+    uint32_t post_idx = (loc >> 8) & 0xffff;
+    return {pre_idx, post_idx};
+}
+
+uint64_t Network::idsToLocation(uint32_t pre, uint32_t post) const {
+    uint64_t loc = 0;
+    loc = pre | (post << 8);
+    return loc;
+}
 
 std::vector<float> Network::get_current_voltage_state() const {
     std::vector<float> state(neurons.size(), 0.0);
@@ -37,16 +76,15 @@ void Network::step(std::vector<uint8_t> inputs) {
 
     // Synaptic input
     for (auto& [loc, syn] : synapses) {
-        uint32_t pre_idx = loc & 0xffff;
-        uint32_t post_idx = (loc >> 8) & 0xffff;
+        auto [pre_idx, post_idx] = locationToIds(loc);
         
-        syn.update_pre(dt);
-        syn.update_post(dt);
+        syn->update_pre(dt);
+        syn->update_post(dt);
 
         // STDP
         if (neurons[pre_idx]->spiked) {
-            syn.on_pre_spike();
-            dv[post_idx] += syn.weight;
+            syn->on_pre_spike();
+            dv[post_idx] += syn->weight;
         }
     }
 
@@ -56,10 +94,9 @@ void Network::step(std::vector<uint8_t> inputs) {
 
     // STDP
     for (auto& [loc, syn] : synapses) {
-        uint32_t pre_idx = loc & 0xffff;
-        uint32_t post_idx = (loc >> 8) & 0xffff;
-        syn.apply_stdp(neurons[pre_idx]->spiked, neurons[post_idx]->spiked);
-        if (neurons[post_idx]->spiked) syn.on_post_spike();
+        auto [pre_idx, post_idx] = locationToIds(loc);
+        syn->apply_stdp(neurons[pre_idx]->spiked, neurons[post_idx]->spiked);
+        if (neurons[post_idx]->spiked) syn->on_post_spike();
     }
 
     time += dt;
@@ -85,4 +122,8 @@ void Network::update(float dt) {
 
 void Network::destroy() const {
     if (render) render->destroy();
+}
+
+uint32_t Network::create_id(std::shared_ptr<Neuron> neuron) const {
+    return neurons.size();
 }
