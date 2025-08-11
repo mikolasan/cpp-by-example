@@ -26,7 +26,7 @@ struct Neuron {
         if (render) render->update(dt);
     }
 
-    void draw(float time) const {
+    void draw(float time) {
         if (render) render->draw(time);
     }
 

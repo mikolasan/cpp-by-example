@@ -4,6 +4,9 @@
 #include "render/neuron_render.hpp"
 #include "render/network_render.h"
 
+Network::Network() {
+    layers.push_back({});
+}
 
 void Network::addLayer(const NeuronLayer&& layer, const std::vector<size_t>& area_size) {
     layers.push_back(layer);
@@ -21,10 +24,11 @@ void Network::addLayer(const NeuronLayer&& layer, const std::vector<size_t>& are
     }
 }
 
-void Network::addNeuron(const std::vector<size_t>& pos, const NeuronLayer& connected_to) {
+void Network::addNeuron(const std::vector<int32_t>& pos, const NeuronLayer& connected_to) {
     uint32_t layer = pos[2];
     if (layer >= layers.size()) {
-        std::cerr << "wrong layer position\n";
+        layers.insert(layers.end(), layers.size() - layer + 1, {});
+        // std::cerr << "wrong layer position\n";
         return;
     }
 
@@ -106,7 +110,7 @@ void Network::init() {
     if (render) render->init();
 }
 
-void Network::draw(float time) const {
+void Network::draw(float time) {
     if (render) render->draw(time);
 }
 

@@ -9,7 +9,7 @@
 #include "network.h"
 #include "render_strategy.h"
 
-
+const int32_t max_area_size = 20;
 
 struct NetworkVisualContext : VisualContext {
     // std::vector<bx::Vec3> positions;
@@ -34,11 +34,11 @@ struct NetworkRenderStrategy : RenderStrategy {
     void init() override;
     void addLayer(const NeuronLayer& layer, const std::vector<size_t>& area_size);
     void update(float dt) override;
-    void draw(float time) const override;
+    void draw(float time) override;
     void destroy() override;
 
-    void drawNeurons(float time) const;
-    void drawSelection(float time) const;
+    void drawNeurons(float time);
+    void drawSelection(float time);
 
     bgfx::VertexBufferHandle m_vbh;
     bgfx::IndexBufferHandle  m_ibh;
@@ -57,6 +57,7 @@ struct NetworkRenderStrategy : RenderStrategy {
     int32_t selected_x = 0;
     int32_t selected_y = 0;
     int32_t selected_z = 0;
+    std::shared_ptr<Neuron> selected_neuron;
 
     float m_color[4];
     bgfx::UniformHandle u_color;

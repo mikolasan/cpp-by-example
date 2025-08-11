@@ -4,6 +4,7 @@
 #include "network_render.h"
 #include "neuron_render.hpp"
 
+
 void NetworkRenderStrategy::init() {
     m_lastFrameMissing = 0;
     // 80 bytes stride = 64 bytes for 4x4 matrix + 16 bytes for RGBA color.
@@ -92,18 +93,26 @@ void NetworkRenderStrategy::update(float dt) {
     if (ImGui::IsKeyPressed(ImGuiKey_W))
         selected_y = std::max(0, selected_y - 1);
     if (ImGui::IsKeyPressed(ImGuiKey_S))
-        selected_y = std::min(area_size_y - 1, selected_y + 1);
+        selected_y = std::min(max_area_size - 1, selected_y + 1);
     
     if (ImGui::IsKeyPressed(ImGuiKey_A))
         selected_x = std::max(0, selected_x - 1);
     if (ImGui::IsKeyPressed(ImGuiKey_D))
-        selected_x = std::min(area_size_x - 1, selected_x + 1);
+        selected_x = std::min(max_area_size - 1, selected_x + 1);
     
     if (ImGui::IsKeyPressed(ImGuiKey_R))
-        selected_x = std::max(0, selected_z - 1);
+        selected_z = std::max(0, selected_z - 1);
     if (ImGui::IsKeyPressed(ImGuiKey_F))
-        selected_x = std::min(area_size_z - 1, selected_z + 1);
+        selected_z = std::min(max_area_size - 1, selected_z + 1);
+    
+    if (ImGui::IsKeyPressed(ImGuiKey_Space)) {
+        std::vector<int32_t> pos = { selected_x, selected_y, selected_z };
+        if (selected_neuron == nullptr) {
+            // create neuron
+            ctx->net.addNeuron(pos, {});
+        }
 
+    }
         // to total number of instances to draw
     uint32_t totalCubes = ctx->net.neurons.size();
 
@@ -119,7 +128,7 @@ void NetworkRenderStrategy::update(float dt) {
     }
 }
 
-void NetworkRenderStrategy::drawNeurons(float time) const {
+void NetworkRenderStrategy::drawNeurons(float time) {
     bgfx::InstanceDataBuffer idb;
     bgfx::allocInstanceDataBuffer(&idb, drawnCubes, instanceStride);
 
@@ -130,14 +139,22 @@ void NetworkRenderStrategy::drawNeurons(float time) const {
     const float start_y = - area_size_y * offset / 2.0f;
     const float start_z = - area_size_z * offset / 2.0f;
 
+    // reset the selection
+    selected_neuron = nullptr;
+
     for (uint32_t ii = 0; ii < drawnCubes; ++ii)
     {
         const auto& neuron = ctx->net.neurons[ii];
 
         std::shared_ptr<NeuronRenderStrategy>& s = std::dynamic_pointer_cast<NeuronRenderStrategy>(neuron->render);
         bx::Vec3 pos = s->get_position();
-        uint32_t yy = pos.y;
         uint32_t xx = pos.x;
+        uint32_t yy = pos.y;
+        uint32_t zz = pos.z;
+
+        if (xx == selected_x && yy == selected_y && zz == selected_z) {
+            selected_neuron = neuron;
+        }
 
         float* mtx = (float*)data;
         time = 0.0f;
@@ -156,7 +173,7 @@ void NetworkRenderStrategy::drawNeurons(float time) const {
 
         mtx[12] = start_x + float(xx) * offset;
         mtx[13] = start_y + float(yy) * offset;
-        mtx[14] = 0.0f;
+        mtx[14] = start_z + float(zz) * offset;
 
         float* color = (float*)&data[64];
 
@@ -187,7 +204,7 @@ void NetworkRenderStrategy::drawNeurons(float time) const {
     bgfx::submit(0, m_program);
 }
 
-void NetworkRenderStrategy::drawSelection(float time) const {
+void NetworkRenderStrategy::drawSelection(float time) {
 
     const float offset = 3.0f;
     const float start_x = - area_size_x * offset / 2.0f;
@@ -215,7 +232,7 @@ void NetworkRenderStrategy::drawSelection(float time) const {
     bgfx::submit(0, m_selection_program);
 }
 
-void NetworkRenderStrategy::draw(float time) const {
+void NetworkRenderStrategy::draw(float time) {
     if (drawnCubes > 0) {
         drawNeurons(time);
     }

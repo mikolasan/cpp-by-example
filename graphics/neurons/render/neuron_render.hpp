@@ -69,7 +69,7 @@ struct NeuronRenderStrategy : RenderStrategy {
     // Optional: nothing for now
   }
 
-  void draw(float time) const override {
+  void draw(float time) override {
     // size_t idx = ctx->idx;
     // const bx::Vec3& pos = ctx->positions[idx];
 

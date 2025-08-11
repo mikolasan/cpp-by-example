@@ -26,10 +26,10 @@ struct Network {
 
     std::shared_ptr<RenderStrategy> render;
 
-    explicit Network() = default;
+    explicit Network();
 
     void addLayer(const NeuronLayer&& layer, const std::vector<size_t>& area_size);
-    void addNeuron(const std::vector<size_t>& pos, const NeuronLayer& connected_to);
+    void addNeuron(const std::vector<int32_t>& pos, const NeuronLayer& connected_to);
     void addConnection(const std::shared_ptr<Neuron>& n1,
         const std::shared_ptr<Neuron>& n2);
 
@@ -39,7 +39,7 @@ struct Network {
     std::vector<float> get_current_voltage_state() const;
     void step(std::vector<uint8_t> inputs);
     void init();
-    void draw(float time) const;
+    void draw(float time);
     void update(float dt);
     void destroy() const;
 
