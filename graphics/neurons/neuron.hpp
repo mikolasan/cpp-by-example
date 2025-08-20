@@ -16,8 +16,8 @@ struct Neuron {
 
     std::shared_ptr<RenderStrategy> render;
 
-    void init() {
-        if (render) render->init();
+    void init(bgfx::ViewId id) {
+        if (render) render->init(id);
     }
 
     void simulate(float input, float dt) {

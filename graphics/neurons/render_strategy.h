@@ -5,11 +5,12 @@
 // #include <vector>
 
 // #include <bx/math.h>
+#include <bgfx/bgfx.h>
 
 struct VisualContext {};
 
 struct RenderStrategy {
-    virtual void init() = 0;
+    virtual void init(bgfx::ViewId id) = 0;
     virtual void update(float dt) = 0;
     virtual void draw(float time) = 0;
     virtual void destroy() = 0;

@@ -106,8 +106,8 @@ void Network::step(std::vector<uint8_t> inputs) {
     time += dt;
 }
 
-void Network::init() {
-    if (render) render->init();
+void Network::init(bgfx::ViewId id) {
+    if (render) render->init(id);
 }
 
 void Network::draw(float time) {

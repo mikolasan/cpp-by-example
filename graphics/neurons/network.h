@@ -38,7 +38,7 @@ struct Network {
     
     std::vector<float> get_current_voltage_state() const;
     void step(std::vector<uint8_t> inputs);
-    void init();
+    void init(bgfx::ViewId id);
     void draw(float time);
     void update(float dt);
     void destroy() const;

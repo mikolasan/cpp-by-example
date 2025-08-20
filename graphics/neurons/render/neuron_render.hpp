@@ -55,7 +55,7 @@ struct NeuronRenderStrategy : RenderStrategy {
     int slices = 6, // horizontal segments (vertical lines make slices like with apples or oranges)
     float radius = 0.9f);
 
-  void init() override {
+  void init(bgfx::ViewId id) override {
     std::cerr << "call 'init_once' instead" << std::endl;
   }
 

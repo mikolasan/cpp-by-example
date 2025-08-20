@@ -20,6 +20,7 @@ struct NetworkVisualContext : VisualContext {
 
 struct NetworkRenderStrategy : RenderStrategy {
 
+    bgfx::ViewId view_id;
     std::shared_ptr<NetworkVisualContext> ctx;
 
     NetworkRenderStrategy(std::shared_ptr<NetworkVisualContext> ctx) : ctx(ctx) {}
@@ -31,7 +32,7 @@ struct NetworkRenderStrategy : RenderStrategy {
     //     area_size_z = 1;
     // }
 
-    void init() override;
+    void init(bgfx::ViewId id) override;
     void addLayer(const NeuronLayer& layer, const std::vector<size_t>& area_size);
     void update(float dt) override;
     void draw(float time) override;

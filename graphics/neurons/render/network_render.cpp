@@ -5,7 +5,8 @@
 #include "neuron_render.hpp"
 
 
-void NetworkRenderStrategy::init() {
+void NetworkRenderStrategy::init(bgfx::ViewId id) {
+    view_id = id;
     m_lastFrameMissing = 0;
     // 80 bytes stride = 64 bytes for 4x4 matrix + 16 bytes for RGBA color.
     instanceStride = 80;
@@ -201,7 +202,7 @@ void NetworkRenderStrategy::drawNeurons(float time) {
     bgfx::setState(BGFX_STATE_DEFAULT);
 
     // Submit primitive for rendering to view 0.
-    bgfx::submit(0, m_program);
+    bgfx::submit(view_id, m_program);
 }
 
 void NetworkRenderStrategy::drawSelection(float time) {
@@ -229,7 +230,7 @@ void NetworkRenderStrategy::drawSelection(float time) {
     bgfx::setVertexBuffer(0, m_selection_vbh);
     bgfx::setIndexBuffer(m_selection_ibh);
     bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);  // Use wireframe cube
-    bgfx::submit(0, m_selection_program);
+    bgfx::submit(view_id, m_selection_program);
 }
 
 void NetworkRenderStrategy::draw(float time) {
