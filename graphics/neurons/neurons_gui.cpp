@@ -22,6 +22,7 @@
 #include "simulation_clock.hpp"
 #include "mnist_data_processor.h"
 
+#include "render/pos_color_vertex.h"
 #include "camera.cpp"
 #include "mouse.cpp"
 #include "settings.cpp"
@@ -50,6 +51,7 @@ namespace
 		{
 			Args args(_argc, _argv);
 
+			PosColorVertex::init();
 			data.init();			
 
 			m_width = _width;

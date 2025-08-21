@@ -202,6 +202,7 @@ add_executable(neurons_gui
     bgfx_ext/entry/input.cpp
     bgfx_ext/imgui/bgfx_imgui.cpp
     bgfx_ext/example-glue.cpp
+    bgfx_ext/debugdraw/debugdraw.cpp
     thirdparty/meshoptimizer/src/allocator.cpp
     thirdparty/meshoptimizer/src/clusterizer.cpp
     thirdparty/meshoptimizer/src/indexanalyzer.cpp

@@ -8,6 +8,8 @@
 
 #include "network.h"
 #include "render_strategy.h"
+#include "ground.hpp"
+
 
 const int32_t max_area_size = 20;
 
@@ -64,6 +66,8 @@ struct NetworkRenderStrategy : RenderStrategy {
     bgfx::UniformHandle u_color;
     bgfx::ProgramHandle m_selection_program;
     bgfx::ProgramHandle m_program;
+
+    std::unique_ptr<Ground> ground;
 };
 
 #endif

@@ -7,29 +7,13 @@
 #include <bx/math.h>
 #include <bgfx/bgfx.h>
 
+#include "pos_color_vertex.h"
 #include "render_strategy.h"
 
 
 struct Neuron;
 
-struct PosColorVertex
-{
-  float m_x;
-  float m_y;
-  float m_z;
-  uint32_t m_abgr;
 
-  static void init()
-  {
-    ms_layout
-      .begin()
-      .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-      .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-      .end();
-  };
-
-  static bgfx::VertexLayout ms_layout;
-};
 
 struct NeuronVisualContext : VisualContext {
   size_t idx;

@@ -41,8 +41,6 @@ namespace
 }
 
 void NeuronRenderStrategy::init_once() {
-	
-    PosColorVertex::init();
 
 
     // std::vector<PosColorVertex> vertices;

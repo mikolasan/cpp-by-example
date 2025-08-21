@@ -11,6 +11,8 @@ void NetworkRenderStrategy::init(bgfx::ViewId id) {
     // 80 bytes stride = 64 bytes for 4x4 matrix + 16 bytes for RGBA color.
     instanceStride = 80;
 
+    ground = std::make_unique<Ground>(view_id);
+
     NeuronRenderStrategy::init_once();
 
     // std::vector<PosColorVertex> vertices;
@@ -72,9 +74,9 @@ void NetworkRenderStrategy::init(bgfx::ViewId id) {
     bgfx::makeRef(s_cubeTriList, sizeof(s_cubeTriList) )
     );
 
-    m_color[0] = 0.70f;
-    m_color[1] = 0.65f;
-    m_color[2] = 0.60f;
+    m_color[0] = 0.62f;
+    m_color[1] = 0.083f;
+    m_color[2] = 0.653f;
     m_color[3] = 1.0f;
 
     m_selection_program = loadProgram("vs_selection", "fs_selection");
@@ -130,6 +132,7 @@ void NetworkRenderStrategy::update(float dt) {
 }
 
 void NetworkRenderStrategy::drawNeurons(float time) {
+
     bgfx::InstanceDataBuffer idb;
     bgfx::allocInstanceDataBuffer(&idb, drawnCubes, instanceStride);
 
@@ -220,20 +223,20 @@ void NetworkRenderStrategy::drawSelection(float time) {
     // Create transform matrix
     float selMtx[16];
     bx::mtxIdentity(selMtx);
-    selMtx[12] = sel_x;
-    selMtx[13] = sel_y;
-    selMtx[14] = sel_z;
+    bx::mtxTranslate(selMtx, sel_x, sel_y, sel_z);
 
     // Set transform, color, and render state
     bgfx::setTransform(selMtx);
     bgfx::setUniform(u_color, m_color);
     bgfx::setVertexBuffer(0, m_selection_vbh);
     bgfx::setIndexBuffer(m_selection_ibh);
-    bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINES);  // Use wireframe cube
+    bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_PT_LINESTRIP);  // Use wireframe cube
     bgfx::submit(view_id, m_selection_program);
 }
 
 void NetworkRenderStrategy::draw(float time) {
+    ground->draw();
+
     if (drawnCubes > 0) {
         drawNeurons(time);
     }

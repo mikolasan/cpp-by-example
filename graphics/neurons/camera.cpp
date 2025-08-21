@@ -19,8 +19,8 @@ struct Camera
 		m_target.curr = { 0.0f, 0.0f, 0.0f };
 		m_target.dest = { 0.0f, 0.0f, 0.0f };
 
-		m_pos.curr = { 0.0f, 0.0f, -78.0f };
-		m_pos.dest = { 0.0f, 0.0f, -78.0f };
+		m_pos.curr = { 2.0f, 3.0f, 4.0f };
+		m_pos.dest = { 0.0f, 0.0f, 4.0f };
 
 		m_orbit[0] = 0.0f;
 		m_orbit[1] = 0.0f;
@@ -74,6 +74,34 @@ struct Camera
 
 	void consumeOrbit(float _amount)
 	{
+		float consume[2];
+		consume[0] = m_orbit[0] * _amount;
+		consume[1] = m_orbit[1] * _amount;
+		m_orbit[0] -= consume[0];
+		m_orbit[1] -= consume[1];
+
+		const bx::Vec3 toPos     = bx::sub(m_pos.curr, m_target.curr);
+		const float toPosLen     = bx::length(toPos);
+		const float invToPosLen  = 1.0f / (toPosLen + bx::kFloatSmallest);
+		const bx::Vec3 toPosNorm = bx::mul(toPos, invToPosLen);
+
+		float ll[2];
+		bx::toLatLong(&ll[0], &ll[1], toPosNorm);
+		ll[0] += consume[0];
+		ll[1] -= consume[1];
+		ll[1]  = bx::clamp(ll[1], 0.02f, 0.98f);
+
+		const bx::Vec3 tmp  = bx::fromLatLong(ll[0], ll[1]);
+		const bx::Vec3 diff = bx::mul(bx::sub(tmp, toPosNorm), toPosLen);
+
+		m_pos.curr = bx::add(m_pos.curr, diff);
+		m_pos.dest = bx::add(m_pos.dest, diff);
+	}
+
+	// void consumeOrbit(float _amount)
+	// {
+
+
 		// float consume[2];
 		// consume[0] = m_orbit[0] * _amount;
 		// consume[1] = m_orbit[1] * _amount;
@@ -150,30 +178,31 @@ struct Camera
 
 		///////////////////////////////////////////////////////////////////
 
-		float yawDelta   = m_orbit[0] * _amount;
-    float pitchDelta = m_orbit[1] * _amount;
+		// float yawDelta   = m_orbit[0] * _amount;
+    // float pitchDelta = m_orbit[1] * _amount;
 
-    m_orbit[0] -= yawDelta;
-    m_orbit[1] -= pitchDelta;
+    // m_orbit[0] -= yawDelta;
+    // m_orbit[1] -= pitchDelta;
 
-    // Yaw around world Y
-    bx::Quaternion qYaw = bx::rotateY(yawDelta);
+    // // Yaw around world Y
+    // bx::Quaternion qYaw = bx::rotateY(yawDelta);
 
-    // Pitch around camera's local right (derived from current orientation)
-    bx::Vec3 forward = bx::mul({0.0f, 0.0f, 1.0f}, m_accum_orientation);
-    bx::Vec3 right   = bx::normalize(bx::cross({0.0f, 1.0f, 0.0f}, forward));
-    bx::Quaternion qPitch  = bx::fromAxisAngle(right, pitchDelta);
+    // // Pitch around camera's local right (derived from current orientation)
+    // bx::Vec3 forward = bx::mul({0.0f, 0.0f, 1.0f}, m_accum_orientation);
+    // bx::Vec3 right   = bx::normalize(bx::cross({0.0f, 1.0f, 0.0f}, forward));
+    // bx::Quaternion qPitch  = bx::fromAxisAngle(right, pitchDelta);
 
-    // Accumulate orientation
-    m_accum_orientation = bx::normalize(bx::mul(qPitch, bx::mul(qYaw, m_accum_orientation)));
+    // // Accumulate orientation
+    // m_accum_orientation = bx::normalize(bx::mul(qPitch, bx::mul(qYaw, m_accum_orientation)));
 
-    // Apply to initial orbit vector
-    float radius = bx::length(bx::sub(m_pos.curr, m_target.curr));
-    bx::Vec3 defaultDir = {0.0f, 0.0f, radius}; // start orbiting along -Z
-    bx::Vec3 newDir     = bx::mul(defaultDir, m_accum_orientation);
-    m_pos.curr = bx::add(m_target.curr, newDir);
-    m_pos.dest = m_pos.curr;
-	}
+    // // Apply to initial orbit vector
+    // float radius = bx::length(bx::sub(m_pos.curr, m_target.curr));
+    // bx::Vec3 defaultDir = {0.0f, 0.0f, radius}; // start orbiting along -Z
+    // bx::Vec3 newDir     = bx::mul(defaultDir, m_accum_orientation);
+    // m_pos.curr = bx::add(m_target.curr, newDir);
+    // m_pos.dest = m_pos.curr;
+	
+	// }
 
 	void update(float _dt)
 	{
@@ -181,8 +210,8 @@ struct Camera
 
 		consumeOrbit(amount);
 
-		// m_target.curr = bx::lerp(m_target.curr, m_target.dest, amount);
-		// m_pos.curr    = bx::lerp(m_pos.curr,    m_pos.dest,    amount);
+		m_target.curr = bx::lerp(m_target.curr, m_target.dest, amount);
+		m_pos.curr    = bx::lerp(m_pos.curr,    m_pos.dest,    amount);
 	}
 
 	void envViewMtx(float* _mtx)
