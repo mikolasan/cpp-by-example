@@ -88,8 +88,9 @@ NeuronLayer MnistDataProcessor::prepare_neurons() const {
     auto ctx = std::make_shared<NeuronVisualContext>(neurons[i]);
     ctx->position = {
       float(i % area_size[0]),
+      0.0f,
       float(i / area_size[0]),
-      0.0f };
+    };
     neurons[i]->render = std::make_shared<NeuronRenderStrategy>(ctx);
   }
 

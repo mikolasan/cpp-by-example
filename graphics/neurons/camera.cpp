@@ -20,7 +20,7 @@ struct Camera
 		m_target.dest = { 0.0f, 0.0f, 0.0f };
 
 		m_pos.curr = { 2.0f, 3.0f, 4.0f };
-		m_pos.dest = { 0.0f, 0.0f, 4.0f };
+		m_pos.dest = { 5.0f, 9.0f, -12.0f };
 
 		m_orbit[0] = 0.0f;
 		m_orbit[1] = 0.0f;

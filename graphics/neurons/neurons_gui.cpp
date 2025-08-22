@@ -194,10 +194,9 @@ namespace
 			ImGui::SetNextWindowPos(ImVec2(0, 0));
 			ImGui::SetNextWindowSize(ImVec2(leftPanelWidth, 0));
 
-			ImGui::Begin("MainDock",
+			ImGui::Begin("Controls",
 					nullptr,
 					ImGuiWindowFlags_NoTitleBar |
-					ImGuiWindowFlags_NoResize   |
 					ImGuiWindowFlags_NoMove     |
 					ImGuiWindowFlags_NoCollapse);
 			
@@ -351,6 +350,18 @@ namespace
 						m_camera.dolly(float(m_mouse.m_scroll) * 0.05f);
 					}
 				}
+
+				const float camera_step = 3.0f;
+				if (ImGui::IsKeyPressed(ImGuiKey_RightArrow))
+						m_camera.m_target.dest.x +=  camera_step;
+				if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow))
+						m_camera.m_target.dest.x -=  camera_step;
+				
+				if (ImGui::IsKeyPressed(ImGuiKey_UpArrow))
+						m_camera.m_target.dest.z +=  camera_step;
+				if (ImGui::IsKeyPressed(ImGuiKey_DownArrow))
+						m_camera.m_target.dest.z -=  camera_step;
+
 				m_camera.update(deltaTimeSec);
 				// bx::memCopy(m_uniforms.m_cameraPos, &m_camera.m_pos.curr.x, 3*sizeof(float) );
 

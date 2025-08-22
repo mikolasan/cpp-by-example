@@ -25,7 +25,7 @@ void Network::addLayer(const NeuronLayer&& layer, const std::vector<size_t>& are
 }
 
 void Network::addNeuron(const std::vector<int32_t>& pos, const NeuronLayer& connected_to) {
-    uint32_t layer = pos[2];
+    uint32_t layer = pos[1]; // y
     if (layer >= layers.size()) {
         layers.insert(layers.end(), layers.size() - layer + 1, {});
         // std::cerr << "wrong layer position\n";

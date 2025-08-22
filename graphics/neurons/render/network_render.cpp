@@ -94,19 +94,19 @@ void NetworkRenderStrategy::addLayer(const NeuronLayer& layer, const std::vector
 
 void NetworkRenderStrategy::update(float dt) {
     if (ImGui::IsKeyPressed(ImGuiKey_W))
-        selected_y = std::max(0, selected_y - 1);
+        selected_z = std::min(max_area_size - 1, selected_z + 1);
     if (ImGui::IsKeyPressed(ImGuiKey_S))
-        selected_y = std::min(max_area_size - 1, selected_y + 1);
+        selected_z = std::max(0, selected_z - 1);
     
-    if (ImGui::IsKeyPressed(ImGuiKey_A))
-        selected_x = std::max(0, selected_x - 1);
     if (ImGui::IsKeyPressed(ImGuiKey_D))
         selected_x = std::min(max_area_size - 1, selected_x + 1);
+    if (ImGui::IsKeyPressed(ImGuiKey_A))
+        selected_x = std::max(0, selected_x - 1);
     
     if (ImGui::IsKeyPressed(ImGuiKey_R))
-        selected_z = std::max(0, selected_z - 1);
+        selected_y = std::min(max_area_size - 1, selected_y + 1);
     if (ImGui::IsKeyPressed(ImGuiKey_F))
-        selected_z = std::min(max_area_size - 1, selected_z + 1);
+        selected_y = std::max(0, selected_y - 1);
     
     if (ImGui::IsKeyPressed(ImGuiKey_Space)) {
         std::vector<int32_t> pos = { selected_x, selected_y, selected_z };
@@ -175,12 +175,13 @@ void NetworkRenderStrategy::drawNeurons(float time) {
         // |  2   6  10  14 |
         // |  3   7  11  15 |
 
-        mtx[12] = start_x + float(xx) * offset;
-        mtx[13] = start_y + float(yy) * offset;
-        mtx[14] = start_z + float(zz) * offset;
+        bx::mtxTranslate(mtx,
+            start_x + float(xx) * offset,
+            start_y + float(yy) * offset,
+            start_z + float(zz) * offset
+        );
 
         float* color = (float*)&data[64];
-
         float r = neuron->v;
         color[0] = r;
         color[1] = 0.0f;
