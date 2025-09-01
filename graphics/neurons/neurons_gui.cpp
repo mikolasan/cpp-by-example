@@ -82,29 +82,35 @@ namespace
 
 			imguiCreate();
 
-
-			auto ctx = std::make_shared<NetworkVisualContext>(net);
-			net.render = std::make_shared<NetworkRenderStrategy>(ctx);
-
-
+			std::unique_ptr<Network> net = std::make_unique<Network>();
+			{
+				auto _net = neuf::deserialize("network.nnf");
+				if (_net) {
+					net.swap(_net);
+				}
+			}
+			
 			bool loadReceptors = false;
 			if (loadReceptors) {
 				const auto area_size = data.get_area_size();
-				net.addLayer(data.prepare_neurons(), area_size);
+				net->addLayer(data.prepare_neurons(), area_size);
 			}
 
-			// for (size_t i = 0; i < net.neurons.size(); ++i) {
-			// 	auto ctx2 = std::make_shared<NeuronVisualContext>(net.neurons[i]);
+			// for (size_t i = 0; i < net->neurons.size(); ++i) {
+			// 	auto ctx2 = std::make_shared<NeuronVisualContext>(net->neurons[i]);
 			// 	ctx2->position = {
 			// 		float(i % int32_t(area_size.x)),
 			// 		i / area_size.x,
 			// 		0.0f };
-			// 	net.neurons[i].render = std::make_shared<NeuronRenderStrategy>(ctx2);
+			// 	net->neurons[i].render = std::make_shared<NeuronRenderStrategy>(ctx2);
 			// }
 
 			sim_clock.set_dt(10);
 			sim_clock.pause();
-			net.init(kMainView);
+
+			ctx = std::make_shared<NetworkVisualContext>(std::move(net)); // moves ownership into the context
+			ctx->net->render = std::make_shared<NetworkRenderStrategy>(ctx);
+			ctx->net->init(kMainView); // init render after it has been assigned
 		}
 
 		void ResetSimulation() {
@@ -115,7 +121,7 @@ namespace
 		{
 			imguiDestroy();
 
-			net.destroy();
+			ctx->net->destroy();
 
 			// Shutdown bgfx.
 			bgfx::shutdown();
@@ -163,8 +169,8 @@ namespace
 			sim_clock.update(deltaTimeSec);
 			
 			if (sim_clock.advance()) {
-				net.step(data.convert_current_to_inputs());
-				std::vector<float> voltage_state = net.get_current_voltage_state();
+				ctx->net->step(data.convert_current_to_inputs());
+				std::vector<float> voltage_state = ctx->net->get_current_voltage_state();
 				float t = sim_clock.store(voltage_state);
 			}
 
@@ -218,6 +224,18 @@ namespace
 
 			// Simulation time display
 			// ImGui::Text("Sim Time: %.2f ms", sim_time_ms);
+
+			if (ImGui::Button("Load")) {
+				auto _net = neuf::deserialize("network.nnf");
+				if (_net) {
+					ctx->net = std::move(_net);
+					// TODO: and assign render again
+				}
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Save")) {
+				neuf::serialize(ctx->net.get(), "network.nnf");
+			}
 
 			// Control buttons
 			if (ImGui::Button("Play")) {
@@ -422,8 +440,8 @@ namespace
 
 			
 			bgfx::setViewRect(kMainView, leftPanelWidth, 0, mainViewWidth, m_height);
-			net.update(time);
-			net.draw(time);
+			ctx->net->update(time);
+			ctx->net->draw(time);
 
 			m_lastFrameMissing = 0;
 
@@ -437,7 +455,8 @@ namespace
 
 		MnistDataProcessor data;
 
-		Network net;
+		std::shared_ptr<NetworkVisualContext> ctx;
+
 		entry::MouseState m_mouseState;
 
 		SimulationClock sim_clock;

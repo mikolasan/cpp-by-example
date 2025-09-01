@@ -230,6 +230,7 @@ add_executable(neurons_gui
     neurons/mnist_data_processor.cpp
     neurons/render/neuron_render.cpp
     neurons/render/network_render.cpp
+    neurons/neuron.capnp.c++
     # neurons/camera.cpp
     # neurons/mouse.cpp
     # neurons/settings.cpp
@@ -247,6 +248,7 @@ target_include_directories(neurons_gui PRIVATE
     thirdparty/bgfx/include 
     thirdparty/bimg/include 
     thirdparty/bx/include 
+    thirdparty/capnproto-c++-1.2.0/src
     thirdparty/imgui 
     thirdparty/imgui/backends 
     bgfx_ext
@@ -260,7 +262,9 @@ if (MSVC)
 endif ()
 
 target_link_directories(neurons_gui PUBLIC 
-    thirdparty/bgfx/.build/win64_vs2022/bin)
+    thirdparty/bgfx/.build/win64_vs2022/bin
+    thirdparty/capnproto-c++-1.2.0/src/capnp/Debug
+    thirdparty/capnproto-c++-1.2.0/src/kj/Debug)
 
 target_link_libraries(neurons_gui 
     OpenGL::GL 
@@ -270,6 +274,8 @@ target_link_libraries(neurons_gui
     bimg${CMAKE_BUILD_TYPE}
     bimg_decode${CMAKE_BUILD_TYPE}
     bx${CMAKE_BUILD_TYPE}
+    capnp
+    kj
 )
 
 ###############################################

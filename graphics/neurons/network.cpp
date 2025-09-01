@@ -1,5 +1,12 @@
+#include <fcntl.h>
+#include <fstream>
+#include <io.h>
 #include <iostream>
 
+#include <capnp/message.h>
+#include <capnp/serialize.h>
+
+#include "neuron.capnp.h"
 #include "network.h"
 #include "render/neuron_render.hpp"
 #include "render/network_render.h"
@@ -131,3 +138,128 @@ void Network::destroy() const {
 uint32_t Network::create_id(std::shared_ptr<Neuron> neuron) const {
     return neurons.size();
 }
+
+namespace neuf {
+
+std::shared_ptr<Neuron> makeNeuron(const capgen::Neuron::Reader& reader) {
+    auto n = std::make_shared<Neuron>();
+    n->idx        = reader.getIdx();
+    n->v          = reader.getV();
+    n->threshold  = reader.getThreshold();
+    n->spiked     = reader.getSpiked();
+    return n;
+}
+
+std::shared_ptr<Synapse> makeSynapse(const capgen::Synapse::Reader& reader) {
+    auto s = std::make_shared<Synapse>();
+    s->weight = reader.getWeight();
+    s->trace_pre  = reader.getTracePre();
+    s->trace_post  = reader.getTracePost();
+    return s;
+}
+
+std::unique_ptr<Network> hydrateNetwork(const capgen::Network::Reader& reader) {
+    std::unique_ptr<Network> net = std::make_unique<Network>();
+
+    // --- Neurons ---
+    auto capnpNeurons = reader.getNeurons();
+    net->neurons.reserve(capnpNeurons.size());
+    for (auto nReader : capnpNeurons) {
+        auto n = makeNeuron(nReader);
+        net->neurons.push_back(std::move(n));
+    }
+
+    // --- Layers ---
+    auto capnpLayers = reader.getLayers();
+    net->layers.reserve(capnpLayers.size());
+    for (auto lReader : capnpLayers) {
+        NeuronLayer layer;
+        auto list = lReader.getNeuronIndices();
+        layer.reserve(list.size());
+        for (auto idx : list) {
+            auto n = net->neurons[idx];
+            layer.push_back(n);
+        }
+        net->layers.push_back(layer);
+    }
+
+    // --- Synapses ---
+    auto capnpSynapses = reader.getSynapses();
+    for (auto sReader : capnpSynapses) {
+        auto key   = sReader.getKey();
+        auto value = makeSynapse(sReader.getValue());
+        net->synapses.emplace(key, std::move(value));
+    }
+
+    return net;
+}
+
+void dehydrateNetwork(Network* net, capgen::Network::Builder builder) {
+    // --- Neurons ---
+    auto neuronsBuilder = builder.initNeurons(net->neurons.size());
+    for (size_t i = 0; i < net->neurons.size(); i++) {
+        auto& n = *net->neurons[i];
+        auto nBuilder = neuronsBuilder[i];
+        nBuilder.setIdx(n.idx);
+        nBuilder.setV(n.v);
+        nBuilder.setThreshold(n.threshold);
+        nBuilder.setSpiked(n.spiked);
+    }
+
+    // --- Layers ---
+    auto layersBuilder = builder.initLayers(net->layers.size());
+    for (size_t i = 0; i < net->layers.size(); i++) {
+        auto& layer = net->layers[i];
+        auto lBuilder = layersBuilder[i];
+        auto indicesBuilder = lBuilder.initNeuronIndices(layer.size());
+        for (size_t j = 0; j < layer.size(); j++) {
+            auto n = layer[j];
+            indicesBuilder.set(j, n->idx);
+        }
+    }
+
+    // --- Synapses ---
+    auto synapsesBuilder = builder.initSynapses(net->synapses.size());
+    size_t idx = 0;
+    for (auto& [key, synPtr] : net->synapses) {
+        auto sBuilder = synapsesBuilder[idx++];
+        sBuilder.setKey(key);
+        auto val = sBuilder.initValue();
+        val.setWeight(synPtr->weight);
+        val.setTracePre(synPtr->trace_pre);
+        val.setTracePost(synPtr->trace_post);
+    }
+}
+
+void serialize(Network* net, const std::string& filename) {
+    ::capnp::MallocMessageBuilder message;
+    auto netBuilder = message.initRoot<capgen::Network>();
+    dehydrateNetwork(net, netBuilder);
+
+    int fd = _open(filename.c_str(), _O_WRONLY | _O_CREAT | _O_TRUNC | _O_BINARY, _S_IWRITE);
+    if (fd == -1) {
+        std::cerr << "file open failed: " << strerror(errno) << "\n";
+        return;
+    }
+
+    ::capnp::writeMessageToFd(fd, message);
+    _close(fd);
+}
+
+std::unique_ptr<Network> deserialize(const std::string& filename) {
+    int fd = _open(filename.c_str(), _O_RDONLY | _O_BINARY);
+    struct _stat buf;
+    int result = _stat(filename.c_str(), &buf);
+    if (result != 0) return nullptr;
+    if (buf.st_size == 0) return nullptr;
+
+    capnp::StreamFdMessageReader reader(fd);
+
+    auto netReader = reader.getRoot<capgen::Network>();
+    auto net = hydrateNetwork(netReader);
+
+    _close(fd);
+    return net;
+}
+
+} // namespace neuf

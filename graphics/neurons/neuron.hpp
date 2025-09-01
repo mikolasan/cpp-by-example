@@ -9,10 +9,11 @@ struct Neuron {
     uint32_t idx = 0;
     float v = 0.0f;
     float threshold = 1.0f;
+    bool spiked = false;
+
     float tau = 20.0f;
     float refractory = 0.0f;
     float spike_time = -1.0f;
-    bool spiked = false;
 
     std::shared_ptr<RenderStrategy> render;
 

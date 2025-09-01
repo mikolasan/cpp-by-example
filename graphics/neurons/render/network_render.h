@@ -15,9 +15,11 @@ const int32_t max_area_size = 20;
 
 struct NetworkVisualContext : VisualContext {
     // std::vector<bx::Vec3> positions;
-    Network& net;
+    std::unique_ptr<Network> net;
 
-    explicit NetworkVisualContext(Network& net) : net(net) {}
+    explicit NetworkVisualContext(std::unique_ptr<Network> p_net) {
+        net = std::move(p_net);
+    }
 };
 
 struct NetworkRenderStrategy : RenderStrategy {

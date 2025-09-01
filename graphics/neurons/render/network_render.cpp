@@ -112,12 +112,12 @@ void NetworkRenderStrategy::update(float dt) {
         std::vector<int32_t> pos = { selected_x, selected_y, selected_z };
         if (selected_neuron == nullptr) {
             // create neuron
-            ctx->net.addNeuron(pos, {});
+            ctx->net->addNeuron(pos, {});
         }
 
     }
         // to total number of instances to draw
-    uint32_t totalCubes = ctx->net.neurons.size();
+    uint32_t totalCubes = ctx->net->neurons.size();
 
     if (totalCubes > 0) {
         // figure out how big of a buffer is available
@@ -148,7 +148,7 @@ void NetworkRenderStrategy::drawNeurons(float time) {
 
     for (uint32_t ii = 0; ii < drawnCubes; ++ii)
     {
-        const auto& neuron = ctx->net.neurons[ii];
+        const auto& neuron = ctx->net->neurons[ii];
 
         std::shared_ptr<NeuronRenderStrategy>& s = std::dynamic_pointer_cast<NeuronRenderStrategy>(neuron->render);
         bx::Vec3 pos = s->get_position();

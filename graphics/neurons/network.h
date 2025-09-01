@@ -2,6 +2,7 @@
 #define NETWORK_H
 
 #include <memory>
+#include <string>
 #include <vector>
 #include <unordered_map>
 
@@ -45,5 +46,12 @@ struct Network {
 
     uint32_t create_id(std::shared_ptr<Neuron> neuron) const;
 };
+
+namespace neuf {
+
+void serialize(Network* net, const std::string& filename);
+std::unique_ptr<Network> deserialize(const std::string& filename);
+
+} // namespace neuf
 
 #endif
