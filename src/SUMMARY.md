@@ -24,10 +24,11 @@
   - [Virtual Call](./cpp/oop/virtual_call.md)
 - [STD](./cpp/std/README.md)
   - [Regular exressions](./cpp/std/regex.md)
-  - [String Views](./cpp/std/string_view.md)
+  - [String views](./cpp/std/string_view.md)
   - [Threads](./cpp/std/thread.md)
 - [Templates](./cpp/templates/README.md)
   - [enable if](./cpp/templates/enable_if.md)
+- [Awesome stuff](./cpp/awesome/README.md)
 
 # Cookbook
 
