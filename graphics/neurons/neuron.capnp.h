@@ -37,7 +37,7 @@ struct Neuron {
   class Pipeline;
 
   struct _capnpPrivate {
-    CAPNP_DECLARE_STRUCT_HEADER(fe2d3e13f5a2764b, 2, 0)
+    CAPNP_DECLARE_STRUCT_HEADER(fe2d3e13f5a2764b, 4, 0)
     #if !CAPNP_LITE
     static constexpr ::capnp::_::RawBrandedSchema const* brand() { return &schema->defaultBrand; }
     #endif  // !CAPNP_LITE
@@ -131,6 +131,12 @@ public:
 
   inline bool getSpiked() const;
 
+  inline  ::uint32_t getPosX() const;
+
+  inline  ::uint32_t getPosY() const;
+
+  inline  ::uint32_t getPosZ() const;
+
 private:
   ::capnp::_::StructReader _reader;
   template <typename, ::capnp::Kind>
@@ -170,6 +176,15 @@ public:
 
   inline bool getSpiked();
   inline void setSpiked(bool value);
+
+  inline  ::uint32_t getPosX();
+  inline void setPosX( ::uint32_t value);
+
+  inline  ::uint32_t getPosY();
+  inline void setPosY( ::uint32_t value);
+
+  inline  ::uint32_t getPosZ();
+  inline void setPosZ( ::uint32_t value);
 
 private:
   ::capnp::_::StructBuilder _builder;
@@ -619,6 +634,48 @@ inline bool Neuron::Builder::getSpiked() {
 inline void Neuron::Builder::setSpiked(bool value) {
   _builder.setDataField<bool>(
       ::capnp::bounded<96>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t Neuron::Reader::getPosX() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t Neuron::Builder::getPosX() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS);
+}
+inline void Neuron::Builder::setPosX( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<4>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t Neuron::Reader::getPosY() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t Neuron::Builder::getPosY() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS);
+}
+inline void Neuron::Builder::setPosY( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<5>() * ::capnp::ELEMENTS, value);
+}
+
+inline  ::uint32_t Neuron::Reader::getPosZ() const {
+  return _reader.getDataField< ::uint32_t>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS);
+}
+
+inline  ::uint32_t Neuron::Builder::getPosZ() {
+  return _builder.getDataField< ::uint32_t>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS);
+}
+inline void Neuron::Builder::setPosZ( ::uint32_t value) {
+  _builder.setDataField< ::uint32_t>(
+      ::capnp::bounded<6>() * ::capnp::ELEMENTS, value);
 }
 
 inline float Synapse::Reader::getWeight() const {

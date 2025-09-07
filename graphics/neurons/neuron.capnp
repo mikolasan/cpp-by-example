@@ -10,6 +10,9 @@ struct Neuron {
   v @1 :Float32;
   threshold @2 :Float32;
   spiked @3 :Bool;
+  posX @4 :UInt32;
+  posY @5 :UInt32;
+  posZ @6 :UInt32;
 }
 
 struct Synapse {

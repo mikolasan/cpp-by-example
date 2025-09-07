@@ -147,6 +147,15 @@ std::shared_ptr<Neuron> makeNeuron(const capgen::Neuron::Reader& reader) {
     n->v          = reader.getV();
     n->threshold  = reader.getThreshold();
     n->spiked     = reader.getSpiked();
+
+    auto ctx = std::make_shared<NeuronVisualContext>(n);
+    ctx->position = {
+      float(reader.getPosX()),
+      float(reader.getPosY()),
+      float(reader.getPosZ()),
+    };
+    n->render = std::make_shared<NeuronRenderStrategy>(ctx);
+
     return n;
 }
 
@@ -204,6 +213,10 @@ void dehydrateNetwork(Network* net, capgen::Network::Builder builder) {
         nBuilder.setV(n.v);
         nBuilder.setThreshold(n.threshold);
         nBuilder.setSpiked(n.spiked);
+        auto r = std::dynamic_pointer_cast<NeuronRenderStrategy>(n.render);
+        nBuilder.setPosX(r->ctx->position.x);
+        nBuilder.setPosY(r->ctx->position.y);
+        nBuilder.setPosZ(r->ctx->position.z);
     }
 
     // --- Layers ---
