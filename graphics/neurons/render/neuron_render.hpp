@@ -8,19 +8,23 @@
 #include <bgfx/bgfx.h>
 
 #include "pos_color_vertex.h"
+#include "t_phi_vertex.h"
 #include "render_strategy.h"
 
 
 struct Neuron;
 
-
-
 struct NeuronVisualContext : VisualContext {
   size_t idx;
-  bx::Vec3 position;
+  bx::Vec3 world_position;
+  bx::Vec3 grid_position;
   std::shared_ptr<Neuron> neuron;
 
-  explicit NeuronVisualContext(std::shared_ptr<Neuron> neuron) : position({0.0f, 0.0f, 0.0f}), neuron(neuron) {}
+  explicit NeuronVisualContext(std::shared_ptr<Neuron> neuron) : 
+    world_position({0.0f, 0.0f, 0.0f}),
+    grid_position({0.0f, 0.0f, 0.0f}),
+    neuron(neuron)
+  {}
 };
 
 // TODO: many classes have one instance of subclass 
@@ -38,6 +42,10 @@ struct NeuronRenderStrategy : RenderStrategy {
     int stacks = 2, // vertical segments (horizontal lines make stack of pancakes)
     int slices = 6, // horizontal segments (vertical lines make slices like with apples or oranges)
     float radius = 0.9f);
+  
+  static void buildUnitTubeGrid(
+    uint32_t segT,
+    uint32_t segPhi);
 
   void init(bgfx::ViewId id) override {
     std::cerr << "call 'init_once' instead" << std::endl;
@@ -45,8 +53,12 @@ struct NeuronRenderStrategy : RenderStrategy {
 
   static void init_once();
 
-  bx::Vec3 get_position() {
-    return ctx->position;
+  bx::Vec3 get_world_position() {
+    return ctx->world_position;
+  }
+
+  bx::Vec3 get_grid_position() {
+    return ctx->grid_position;
   }
 
   void update(float dt) override {
@@ -71,4 +83,9 @@ struct NeuronRenderStrategy : RenderStrategy {
 
   static bgfx::VertexBufferHandle m_vbh;
   static bgfx::IndexBufferHandle  m_ibh;
+
+  static std::vector<TPhiVertex> m_tube_vertices;
+  static std::vector<uint16_t> m_tube_indices;
+  static bgfx::VertexBufferHandle m_tube_vbh;
+  static bgfx::IndexBufferHandle m_tube_ibh;
 };

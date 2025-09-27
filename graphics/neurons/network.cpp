@@ -11,6 +11,9 @@
 #include "render/neuron_render.hpp"
 #include "render/network_render.h"
 
+
+constexpr float offset = 3.0f;
+
 Network::Network() {
     layers.push_back({});
 }
@@ -42,7 +45,8 @@ void Network::addNeuron(const std::vector<int32_t>& pos, const NeuronLayer& conn
     std::shared_ptr<Neuron> neuron = std::make_shared<Neuron>();
     neuron->idx = create_id(nullptr);
     auto ctx = std::make_shared<NeuronVisualContext>(neuron);
-    ctx->position = { float(pos[0]), float(pos[1]), float(pos[2]) };
+    ctx->grid_position = { float(pos[0]), float(pos[1]), float(pos[2]) };
+    ctx->world_position = { float(pos[0]) * offset, float(pos[1]) * offset, float(pos[2]) * offset };
     neuron->render = std::make_shared<NeuronRenderStrategy>(ctx);
 
     layers[layer].push_back(neuron);
@@ -53,15 +57,15 @@ void Network::addConnection(const std::shared_ptr<Neuron>& n1, const std::shared
     synapses.emplace(idsToLocation(n1->idx, n2->idx), std::make_shared<Synapse>());
 }
 
-std::pair<uint32_t, uint32_t> Network::locationToIds(uint64_t loc) const {
+std::pair<uint32_t, uint32_t> Network::locationToIds(uint64_t loc) {
     uint32_t pre_idx = loc & 0xffff;
-    uint32_t post_idx = (loc >> 8) & 0xffff;
+    uint32_t post_idx = (loc >> 32) & 0xffff;
     return {pre_idx, post_idx};
 }
 
-uint64_t Network::idsToLocation(uint32_t pre, uint32_t post) const {
+uint64_t Network::idsToLocation(uint32_t pre, uint32_t post) {
     uint64_t loc = 0;
-    loc = pre | (post << 8);
+    loc = pre | (post << 32);
     return loc;
 }
 
@@ -149,10 +153,15 @@ std::shared_ptr<Neuron> makeNeuron(const capgen::Neuron::Reader& reader) {
     n->spiked     = reader.getSpiked();
 
     auto ctx = std::make_shared<NeuronVisualContext>(n);
-    ctx->position = {
+    ctx->grid_position = {
       float(reader.getPosX()),
       float(reader.getPosY()),
       float(reader.getPosZ()),
+    };
+    ctx->world_position = {
+      float(reader.getPosX()) * offset,
+      float(reader.getPosY()) * offset,
+      float(reader.getPosZ()) * offset,
     };
     n->render = std::make_shared<NeuronRenderStrategy>(ctx);
 
@@ -214,9 +223,9 @@ void dehydrateNetwork(Network* net, capgen::Network::Builder builder) {
         nBuilder.setThreshold(n.threshold);
         nBuilder.setSpiked(n.spiked);
         auto r = std::dynamic_pointer_cast<NeuronRenderStrategy>(n.render);
-        nBuilder.setPosX(r->ctx->position.x);
-        nBuilder.setPosY(r->ctx->position.y);
-        nBuilder.setPosZ(r->ctx->position.z);
+        nBuilder.setPosX(r->ctx->grid_position.x);
+        nBuilder.setPosY(r->ctx->grid_position.y);
+        nBuilder.setPosZ(r->ctx->grid_position.z);
     }
 
     // --- Layers ---

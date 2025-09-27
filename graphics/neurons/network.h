@@ -7,7 +7,7 @@
 #include <unordered_map>
 
 #include "neuron.hpp"
-#include "synapse.hpp"
+#include "synapse.h"
 #include "render_strategy.h"
 
 using NeuronLayer = std::vector<std::shared_ptr<Neuron>>;
@@ -34,8 +34,8 @@ struct Network {
     void addConnection(const std::shared_ptr<Neuron>& n1,
         const std::shared_ptr<Neuron>& n2);
 
-    std::pair<uint32_t, uint32_t> locationToIds(uint64_t loc) const;
-    uint64_t idsToLocation(uint32_t pre, uint32_t post) const;
+    static std::pair<uint32_t, uint32_t> locationToIds(uint64_t loc);
+    static uint64_t idsToLocation(uint32_t pre, uint32_t post);
     
     std::vector<float> get_current_voltage_state() const;
     void step(std::vector<uint8_t> inputs);

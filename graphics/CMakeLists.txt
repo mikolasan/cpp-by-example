@@ -227,6 +227,7 @@ add_executable(neurons_gui
     thirdparty/imgui/backends/imgui_impl_sdl2.cpp
     neurons/renderer.cpp
     neurons/network.cpp
+    neurons/synapse.cpp
     neurons/mnist_data_processor.cpp
     neurons/render/neuron_render.cpp
     neurons/render/network_render.cpp

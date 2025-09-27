@@ -43,7 +43,10 @@ struct NetworkRenderStrategy : RenderStrategy {
     void destroy() override;
 
     void drawNeurons(float time);
+    void drawSynapses(float time);
     void drawSelection(float time);
+
+    void drawStandardTube(float time);
 
     bgfx::VertexBufferHandle m_vbh;
     bgfx::IndexBufferHandle  m_ibh;
@@ -51,7 +54,7 @@ struct NetworkRenderStrategy : RenderStrategy {
     bgfx::VertexBufferHandle m_selection_vbh;
     bgfx::IndexBufferHandle  m_selection_ibh;
 
-    uint16_t instanceStride;
+    
     uint32_t drawnCubes;
     uint32_t m_lastFrameMissing;
 
@@ -63,11 +66,14 @@ struct NetworkRenderStrategy : RenderStrategy {
     int32_t selected_y = 0;
     int32_t selected_z = 0;
     std::shared_ptr<Neuron> selected_neuron;
+    std::shared_ptr<Neuron> synapse_from_neuron;
 
     float m_color[4];
     bgfx::UniformHandle u_color;
     bgfx::ProgramHandle m_selection_program;
     bgfx::ProgramHandle m_program;
+    bgfx::ProgramHandle m_tube_program;
+    bgfx::ProgramHandle m_single_tube_program;
 
     std::unique_ptr<Ground> ground;
 };
